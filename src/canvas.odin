@@ -2,7 +2,7 @@ package main
 
 import rl "vendor:raylib"
 import "core:math"
-import "core:fmt"
+import "core:log"
 
 Tool :: enum i32 {
     MOUSE_TOOL,
@@ -68,6 +68,7 @@ canvas_new :: proc() -> ^Canvas {
 
 canvas_free :: proc(canvas: ^Canvas) {
     using canvas
+    log.info("Freeing canvas")
 
     for _, node in nodes {
         node_free(node)

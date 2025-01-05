@@ -1,6 +1,7 @@
 package main
 
 import rl "vendor:raylib"
+import "core:log"
 
 Node :: struct {
     point: Point,
@@ -26,6 +27,8 @@ node_new :: proc(point: Point) -> ^Node {
 
 node_free :: proc(node: ^Node) {
     rl.UnloadSound(node.sound)
+
+    log.info("Freeing node")
 
     for path in node.next_paths {
         path_free(path)

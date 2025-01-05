@@ -1,20 +1,20 @@
 package main
 
-import "core:fmt"
+import "core:log"
 import "core:mem"
 import rl "vendor:raylib"
 
 print_memory_leaks_and_cleanup :: proc(track: ^mem.Tracking_Allocator) {
     if len(track.allocation_map) > 0 {
-        fmt.eprintf("=== %v allocations not freed: ===\n", len(track.allocation_map))
+        log.warnf("=== %v allocations not freed: ===\n", len(track.allocation_map))
         for _, entry in track.allocation_map {
-            fmt.eprintf("- %v bytes @ %v\n", entry.size, entry.location)
+            log.warnf("- %v bytes @ %v\n", entry.size, entry.location)
         }
     }
     if len(track.bad_free_array) > 0 {
-        fmt.eprintf("=== %v incorrect frees: ===\n", len(track.bad_free_array))
+        log.warnf("=== %v incorrect frees: ===\n", len(track.bad_free_array))
         for entry in track.bad_free_array {
-            fmt.eprintf("- %p @ %v\n", entry.memory, entry.location)
+            log.warnf("- %p @ %v\n", entry.memory, entry.location)
         }
     }
     mem.tracking_allocator_destroy(track)
@@ -22,11 +22,15 @@ print_memory_leaks_and_cleanup :: proc(track: ^mem.Tracking_Allocator) {
 
 main :: proc() {
     when ODIN_DEBUG {
+        context.logger = log.create_console_logger()
+        defer log.destroy_console_logger(context.logger)
+
         track: mem.Tracking_Allocator
         mem.tracking_allocator_init(&track, context.allocator)
         context.allocator = mem.tracking_allocator(&track)
         defer print_memory_leaks_and_cleanup(&track)
     }
+
 
     rl.InitWindow(1300, 900, "Nodal music")
     rl.InitAudioDevice()

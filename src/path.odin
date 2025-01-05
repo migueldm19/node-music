@@ -2,7 +2,7 @@ package main
 
 import rl "vendor:raylib"
 import "core:math"
-import "core:fmt"
+import "core:log"
 import "core:time"
 
 Direction :: enum {
@@ -39,6 +39,7 @@ path_new :: proc(start, end: ^Node) -> ^Path {
 }
 
 path_free :: proc(path: ^Path) {
+    log.info("Freeing path")
     free(path)
 }
 
