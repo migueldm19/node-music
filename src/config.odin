@@ -1,0 +1,28 @@
+package main
+
+import rl "vendor:raylib"
+
+NODE_SEPARATION :: 40
+NODE_COLOR :: rl.RED
+
+SUBDIVISION :: 4
+BPM :: 60.0
+
+MAX_ZOOM :: 2.0
+MIN_ZOOM :: 1.0
+ZOOM_SPEED :: 0.1
+
+ZOOM_OFFSET_GRID :: 500.0
+
+LINES_COLOR :: rl.BLUE
+
+POINTS_SIZE :: 2
+POINTS_COLOR :: rl.BLACK
+
+BG_COLOR :: rl.WHITE
+
+NODE_RADIUS :: NODE_SEPARATION / 4
+
+PATH_COLOR :: rl.GREEN
+
+TOOLS :: "Mouse;Nodes;Paths"
