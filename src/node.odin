@@ -8,7 +8,9 @@ Node :: struct {
 
     next_paths: [dynamic]^Path,
 
-    selected, deleted: bool,
+    selected: bool,
+    deleted: bool,
+    begining: bool,
 }
 
 node_new :: proc(point: Point) -> ^Node {

@@ -2,6 +2,7 @@ package main
 
 import rl "vendor:raylib"
 import "core:math"
+import "core:fmt"
 
 Tool :: enum i32 {
     MOUSE_TOOL,
@@ -60,7 +61,7 @@ canvas_new :: proc() -> ^Canvas {
     nodes[n2.point] = n2
     nodes[n3.point] = n3
 
-    node_play(n1)
+    n1.begining = true
 
     return canvas
 }
@@ -88,7 +89,16 @@ canvas_draw :: proc(canvas: ^Canvas) {
 }
 
 canvas_draw_and_update_ui :: proc(canvas: ^Canvas) {
-    rl.GuiToggleGroup({30, 30, 120, 30}, TOOLS, (^i32)(&canvas.tool_selected))
+    // Tool selection
+    rl.GuiToggleGroup(rl.Rectangle{30, 30, 120, 30}, TOOLS, (^i32)(&canvas.tool_selected))
+
+    if rl.GuiButton(rl.Rectangle{800, 30, 30, 30}, "#191#") {
+        for _, node in canvas.nodes {
+            if node.begining {
+                node_play(node)
+            }
+        }
+    }
 }
 
 canvas_draw_possible_elements :: proc(canvas: ^Canvas) {
