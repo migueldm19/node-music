@@ -268,10 +268,14 @@ canvas_handle_mouse_tool_input :: proc(canvas: ^Canvas) {
     }
 
     if rl.IsKeyPressed(.SPACE) {
-        for _, node in nodes {
-            if node.selected {
-                node.begining = !node.begining
-            }
+        canvas_set_begining_nodes(canvas)
+    }
+}
+
+canvas_set_begining_nodes :: proc(canvas: ^Canvas) {
+    for _, node in canvas.nodes {
+        if node.selected {
+            node.begining = !node.begining
         }
     }
 }
