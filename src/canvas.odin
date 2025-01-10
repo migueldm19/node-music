@@ -26,6 +26,8 @@ Canvas :: struct {
     tool_selected: Tool,
 
     selected_node_for_path: ^Node,
+
+    playing: bool,
 }
 
 canvas_new :: proc() -> ^Canvas {
@@ -45,6 +47,7 @@ canvas_new :: proc() -> ^Canvas {
     nodes = make(map[Point]^Node)
     node_delete_queue = make([dynamic]^Node)
 
+/*
     n1 := node_new(Point{6, 3})
     n2 := node_new(Point{5, 5})
     n3 := node_new(Point{7, 4})
@@ -62,7 +65,7 @@ canvas_new :: proc() -> ^Canvas {
     nodes[n3.point] = n3
 
     n1.begining = true
-
+*/
     return canvas
 }
 
@@ -93,13 +96,24 @@ canvas_draw_and_update_ui :: proc(canvas: ^Canvas) {
     // Tool selection
     rl.GuiToggleGroup(rl.Rectangle{30, 30, 120, 30}, TOOLS, (^i32)(&canvas.tool_selected))
 
-    if rl.GuiButton(rl.Rectangle{800, 30, 30, 30}, "#191#") {
-        for _, node in canvas.nodes {
-            if node.begining {
-                node_play(node)
+    if canvas.playing {
+        if rl.GuiButton(rl.Rectangle{800, 30, 30, 30}, "Stop") {
+            canvas.playing = false
+            for _, node in canvas.nodes {
+                node_stop(node)
+            }
+        }
+    } else {
+        if rl.GuiButton(rl.Rectangle{800, 30, 30, 30}, "Play") {
+            canvas.playing = true
+            for _, node in canvas.nodes {
+                if node.begining {
+                    node_play(node)
+                }
             }
         }
     }
+
 }
 
 canvas_draw_possible_elements :: proc(canvas: ^Canvas) {
@@ -251,6 +265,14 @@ canvas_handle_mouse_tool_input :: proc(canvas: ^Canvas) {
     
     if rl.IsKeyPressed(.DELETE) {
         canvas_delete_all_selected_nodes(canvas)
+    }
+
+    if rl.IsKeyPressed(.SPACE) {
+        for _, node in nodes {
+            if node.selected {
+                node.begining = !node.begining
+            }
+        }
     }
 }
 

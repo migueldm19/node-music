@@ -43,17 +43,19 @@ node_draw :: proc(node: ^Node) {
 
     position := point_get_position(point)
 
+    color := BEGIN_NODE_COLOR if begining else NODE_COLOR
+
     if(rl.IsSoundPlaying(sound)) {
         rl.DrawCircleV(
             position,
             NODE_RADIUS,
-            NODE_COLOR
+            color
         )
     } else {
         rl.DrawCircleLinesV(
             position,
             NODE_RADIUS,
-            NODE_COLOR
+            color
         )
     }
 
@@ -86,6 +88,12 @@ node_play :: proc(node: ^Node) {
 
     for path in next_paths {
         path_activate(path)
+    }
+}
+
+node_stop :: proc(node: ^Node) {
+    for path in node.next_paths {
+        path.active = false
     }
 }
 
