@@ -35,6 +35,8 @@ main :: proc() {
     rl.InitWindow(1300, 900, "Nodal music")
     rl.InitAudioDevice()
 
+    notes_init()
+
     canvas := canvas_new()
     defer canvas_free(canvas)
 
@@ -45,6 +47,7 @@ main :: proc() {
         rl.EndDrawing()
     }
 
+    notes_free()
     rl.CloseAudioDevice()
     rl.CloseWindow()
 }

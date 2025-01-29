@@ -216,8 +216,7 @@ canvas_draw_possible_path :: proc(canvas: ^Canvas) {
         start_position := point_get_position(selected_node_for_path.point)
         end_position := canvas_get_relative_mouse_position(canvas)
 
-        dir := get_direction(start_position, end_position)
-        draw_path(start_position, end_position, dir)
+        draw_path(start_position, end_position)
     }
 }
 
@@ -262,7 +261,7 @@ canvas_handle_mouse_tool_input :: proc(canvas: ^Canvas) {
 
         possible_node.selected = true
     }
-    
+
     if rl.IsKeyPressed(.DELETE) {
         canvas_delete_all_selected_nodes(canvas)
     }

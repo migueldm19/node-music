@@ -18,7 +18,7 @@ node_new :: proc(point: Point) -> ^Node {
     node := new(Node)
     node.point = point
 
-    node.sound = rl.LoadSound("A4vL.wav")
+    node.sound = get_note_sound(.LA)
 
     node.next_paths = make([dynamic]^Path)
 
@@ -26,9 +26,9 @@ node_new :: proc(point: Point) -> ^Node {
 }
 
 node_free :: proc(node: ^Node) {
-    rl.UnloadSound(node.sound)
-
     log.info("Freeing node")
+
+    rl.UnloadSound(node.sound)
 
     for path in node.next_paths {
         path_free(path)
@@ -98,7 +98,7 @@ node_stop :: proc(node: ^Node) {
 }
 
 node_update :: proc(node: ^Node) {
-    using node 
+    using node
 
     for path, idx in next_paths {
         if path.end.deleted {

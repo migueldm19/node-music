@@ -4,7 +4,7 @@ import rl "vendor:raylib"
 
 ARROW_POINT_LEN :: 10
 
-draw_arrow_point :: proc(arrow_point: rl.Vector2, dir: Direction, color: rl.Color) {
+draw_arrow_point :: proc(arrow_point: rl.Vector2, dir: Direction, thickness: f32, color: rl.Color) {
     p1 := arrow_point
     p2 := arrow_point
 
@@ -31,8 +31,8 @@ draw_arrow_point :: proc(arrow_point: rl.Vector2, dir: Direction, color: rl.Colo
         p2.y += ARROW_POINT_LEN
     }
 
-    rl.DrawLineV(p1, arrow_point, color)
-    rl.DrawLineV(p2, arrow_point, color)
+    rl.DrawLineEx(p1, arrow_point, thickness, color)
+    rl.DrawLineEx(p2, arrow_point, thickness, color)
 }
 
 get_direction :: proc(start_position, end_position: rl.Vector2) -> Direction {
@@ -47,16 +47,17 @@ get_direction :: proc(start_position, end_position: rl.Vector2) -> Direction {
     return dir
 }
 
-draw_path :: proc(start, end: rl.Vector2, direction: Direction) {
+draw_path :: proc(start, end: rl.Vector2, active: bool = false, progress: f64 = 0.0) {
     start_position := start
     end_position := end
 
+    direction := get_direction(start, end)
+
     if start_position.x != end_position.x {
-        rl.DrawLine(
-            i32(start_position.x),
-            i32(start_position.y),
-            i32(end_position.x),
-            i32(start_position.y),
+        rl.DrawLineEx(
+            start_position,
+            {end_position.x, start_position.y},
+            PATH_THICKNESS,
             PATH_COLOR
         )
         start_position = rl.Vector2{end_position.x, start_position.y}
@@ -70,14 +71,13 @@ draw_path :: proc(start, end: rl.Vector2, direction: Direction) {
     }
 
     if start_position.y != end_position.y {
-        rl.DrawLine(
-            i32(start_position.x),
-            i32(start_position.y),
-            i32(start_position.x),
-            i32(end_position.y),
+        rl.DrawLineEx(
+            start_position,
+            {start_position.x, end_position.y},
+            PATH_THICKNESS,
             PATH_COLOR
         );
     }
 
-    draw_arrow_point(end_position, direction, PATH_COLOR)
+    draw_arrow_point(end_position, direction, PATH_THICKNESS, PATH_COLOR)
 }
