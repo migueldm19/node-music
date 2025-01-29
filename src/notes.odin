@@ -19,16 +19,16 @@ Note :: enum {
 	SI,
 }
 
-N_SAMPLES :: 500
-RATE :: 1000
-AMPLITUDE :: 5.0
+N_SAMPLES :: 1000
+RATE : u32: 3000
+AMPLITUDE :: 5
 
 sinusoid_sample :: proc(amplitude, angular_frequency: f32, sample: u32, initial_phase: f32 = 0.0) -> f32 {
 	return amplitude * math.cos(angular_frequency * f32(sample) + initial_phase)
 }
 
-get_wave :: proc(frequency: f32) -> []f32 {
-	wav := make([]f32, N_SAMPLES)
+get_wave :: proc(frequency: f32) -> [dynamic]f32 {
+	wav : [dynamic]f32 = make([dynamic]f32, N_SAMPLES)
 
 	w := (2 * math.PI * frequency) / f32(RATE)
 
@@ -39,10 +39,10 @@ get_wave :: proc(frequency: f32) -> []f32 {
 	return wav
 }
 
-NOTES: map[Note][]f32
+NOTES: map[Note][dynamic]f32
 
 notes_init :: proc() {
-	NOTES = make(map[Note][]f32)
+	NOTES = make(map[Note][dynamic]f32)
 
 	NOTES[.DO] = get_wave(261.63)
 	NOTES[.DOS] = get_wave(277.18)
@@ -76,15 +76,13 @@ notes_free :: proc() {
 }
 
 get_note_sound :: proc(note: Note) -> rl.Sound {
-	wav := NOTES[note]
-
 	return rl.LoadSoundFromWave(
 		rl.Wave {
 			frameCount = N_SAMPLES,
 			sampleRate = RATE,
 			sampleSize = 32,
-			channels =   2,
-			data =       raw_data(wav[:])
+			channels =   1,
+			data =       raw_data(NOTES[note])
 		}
 	)
 }

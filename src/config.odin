@@ -4,7 +4,7 @@ import rl "vendor:raylib"
 
 NODE_SEPARATION :: 40
 NODE_COLOR :: rl.RED
-BEGIN_NODE_COLOR :: rl.YELLOW
+BEGIN_NODE_COLOR :: rl.ORANGE
 
 SUBDIVISION :: 4
 BPM :: 60.0
