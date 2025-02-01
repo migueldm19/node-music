@@ -75,28 +75,7 @@ canvas_draw :: proc() {
         canvas_draw_possible_elements()
         canvas_draw_nodes()
     rl.EndMode2D()
-    canvas_draw_and_update_ui()
-}
-
-canvas_draw_and_update_ui :: proc() {
-    // Tool selection
-    rl.GuiToggleGroup(rl.Rectangle{30, 30, 120, 30}, TOOLS, (^i32)(&canvas.tool_selected))
-
-    if canvas.playing {
-        if rl.GuiButton(rl.Rectangle{800, 30, 30, 30}, "Stop") {
-            canvas_stop_playing()
-        }
-    } else {
-        if rl.GuiButton(rl.Rectangle{800, 30, 30, 30}, "Play") {
-            canvas.playing = true
-            for _, node in canvas.nodes {
-                if node.begining {
-                    node_play(node)
-                }
-            }
-        }
-    }
-
+    canvas_gui_draw_and_update()
 }
 
 canvas_stop_playing :: proc() {
