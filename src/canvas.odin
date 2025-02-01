@@ -30,8 +30,10 @@ Canvas :: struct {
     playing: bool,
 }
 
-canvas_new :: proc() -> ^Canvas {
-    canvas := new(Canvas)
+canvas: ^Canvas
+
+canvas_init :: proc() {
+    canvas = new(Canvas)
     using canvas
 
     window_height = rl.GetScreenHeight()
@@ -46,30 +48,9 @@ canvas_new :: proc() -> ^Canvas {
 
     nodes = make(map[Point]^Node)
     node_delete_queue = make([dynamic]^Node)
-
-/*
-    n1 := node_new(Point{6, 3})
-    n2 := node_new(Point{5, 5})
-    n3 := node_new(Point{7, 4})
-
-    p1 := path_new(n1, n2)
-    p2 := path_new(n2, n3)
-    p3 := path_new(n3, n1)
-
-    node_add_path(n1, p1)
-    node_add_path(n1, p2)
-    node_add_path(n3, p3)
-
-    nodes[n1.point] = n1
-    nodes[n2.point] = n2
-    nodes[n3.point] = n3
-
-    n1.begining = true
-*/
-    return canvas
 }
 
-canvas_free :: proc(canvas: ^Canvas) {
+canvas_deinit :: proc() {
     using canvas
     log.info("Freeing canvas")
 
@@ -82,17 +63,17 @@ canvas_free :: proc(canvas: ^Canvas) {
     free(canvas)
 }
 
-canvas_draw :: proc(canvas: ^Canvas) {
+canvas_draw :: proc() {
     rl.ClearBackground(BG_COLOR)
     rl.BeginMode2D(canvas.camera)
-        canvas_draw_grid(canvas)
-        canvas_draw_possible_elements(canvas)
-        canvas_draw_nodes(canvas)
+        canvas_draw_grid()
+        canvas_draw_possible_elements()
+        canvas_draw_nodes()
     rl.EndMode2D()
-    canvas_draw_and_update_ui(canvas)
+    canvas_draw_and_update_ui()
 }
 
-canvas_draw_and_update_ui :: proc(canvas: ^Canvas) {
+canvas_draw_and_update_ui :: proc() {
     // Tool selection
     rl.GuiToggleGroup(rl.Rectangle{30, 30, 120, 30}, TOOLS, (^i32)(&canvas.tool_selected))
 
@@ -116,25 +97,25 @@ canvas_draw_and_update_ui :: proc(canvas: ^Canvas) {
 
 }
 
-canvas_draw_possible_elements :: proc(canvas: ^Canvas) {
+canvas_draw_possible_elements :: proc() {
     switch canvas.tool_selected {
     case .MOUSE_TOOL:
-        canvas_draw_possible_selection(canvas)
+        canvas_draw_possible_selection()
     case .NODE_TOOL:
-        canvas_draw_possible_node(canvas)
+        canvas_draw_possible_node()
     case .PATH_TOOL:
-        canvas_draw_possible_path(canvas)
-        canvas_draw_possible_selection(canvas)
+        canvas_draw_possible_path()
+        canvas_draw_possible_selection()
     }
 }
 
-canvas_draw_nodes :: proc(canvas: ^Canvas) {
+canvas_draw_nodes :: proc() {
     for _, node in canvas.nodes {
         node_draw(node)
     }
 }
 
-canvas_draw_grid :: proc(canvas: ^Canvas) {
+canvas_draw_grid :: proc() {
     using canvas
 
     camera_position: rl.Vector2 = camera.target - camera.offset
@@ -186,7 +167,7 @@ canvas_draw_grid :: proc(canvas: ^Canvas) {
     }
 }
 
-canvas_draw_possible_selection :: proc(canvas: ^Canvas) {
+canvas_draw_possible_selection :: proc() {
     using canvas
 
     possible_point := point_from_vector(possible_node_position)
@@ -205,55 +186,55 @@ canvas_draw_possible_selection :: proc(canvas: ^Canvas) {
     )
 }
 
-canvas_draw_possible_node :: proc(canvas: ^Canvas) {
+canvas_draw_possible_node :: proc() {
     rl.DrawCircleLinesV(canvas.possible_node_position, NODE_RADIUS / 2, NODE_COLOR)
 }
 
-canvas_draw_possible_path :: proc(canvas: ^Canvas) {
+canvas_draw_possible_path :: proc() {
     using canvas
 
     if selected_node_for_path != nil {
         start_position := point_get_position(selected_node_for_path.point)
-        end_position := canvas_get_relative_mouse_position(canvas)
+        end_position := canvas_get_relative_mouse_position()
 
         draw_path(start_position, end_position)
     }
 }
 
-canvas_update :: proc(canvas: ^Canvas) {
+canvas_update :: proc() {
     using canvas
 
-    canvas_update_camera(canvas)
-    canvas_update_possible_node_position(canvas)
+    canvas_update_camera()
+    canvas_update_possible_node_position()
 
-    canvas_handle_input(canvas)
+    canvas_handle_input()
 
     for _, node in nodes {
         node_update(node)
     }
 
-    canvas_clear_node_delete_queue(canvas)
+    canvas_clear_node_delete_queue()
 }
 
-canvas_handle_input :: proc(canvas: ^Canvas) {
+canvas_handle_input :: proc() {
     switch canvas.tool_selected {
     case .NODE_TOOL:
-        canvas_handle_node_tool_input(canvas)
+        canvas_handle_node_tool_input()
     case .PATH_TOOL:
-        canvas_handle_path_tool_input(canvas)
+        canvas_handle_path_tool_input()
     case .MOUSE_TOOL:
-        canvas_handle_mouse_tool_input(canvas)
+        canvas_handle_mouse_tool_input()
     }
 }
 
-canvas_handle_mouse_tool_input :: proc(canvas: ^Canvas) {
+canvas_handle_mouse_tool_input :: proc() {
     using canvas
 
     if rl.IsMouseButtonPressed(.LEFT) {
         possible_point := point_from_vector(possible_node_position)
 
         if !rl.IsKeyDown(.LEFT_CONTROL) && !rl.IsKeyDown(.RIGHT_CONTROL) {
-            canvas_unselect_all_nodes(canvas)
+            canvas_unselect_all_nodes()
         }
 
         possible_node, ok := nodes[possible_point]
@@ -263,15 +244,15 @@ canvas_handle_mouse_tool_input :: proc(canvas: ^Canvas) {
     }
 
     if rl.IsKeyPressed(.DELETE) {
-        canvas_delete_all_selected_nodes(canvas)
+        canvas_delete_all_selected_nodes()
     }
 
     if rl.IsKeyPressed(.SPACE) {
-        canvas_set_begining_nodes(canvas)
+        canvas_set_begining_nodes()
     }
 }
 
-canvas_set_begining_nodes :: proc(canvas: ^Canvas) {
+canvas_set_begining_nodes :: proc() {
     for _, node in canvas.nodes {
         if node.selected {
             node.begining = !node.begining
@@ -279,13 +260,13 @@ canvas_set_begining_nodes :: proc(canvas: ^Canvas) {
     }
 }
 
-canvas_unselect_all_nodes :: proc(canvas: ^Canvas) {
+canvas_unselect_all_nodes :: proc() {
     for _, node in canvas.nodes {
         node.selected = false
     }
 }
 
-canvas_delete_all_selected_nodes :: proc(canvas: ^Canvas) {
+canvas_delete_all_selected_nodes :: proc() {
     for point, node in canvas.nodes {
         if node.selected {
             node.deleted = true
@@ -295,7 +276,7 @@ canvas_delete_all_selected_nodes :: proc(canvas: ^Canvas) {
     }
 }
 
-canvas_clear_node_delete_queue :: proc(canvas: ^Canvas) {
+canvas_clear_node_delete_queue :: proc() {
     for node in canvas.node_delete_queue {
         node_free(node)
     }
@@ -303,13 +284,13 @@ canvas_clear_node_delete_queue :: proc(canvas: ^Canvas) {
     clear(&canvas.node_delete_queue)
 }
 
-canvas_handle_node_tool_input :: proc(canvas: ^Canvas) {
+canvas_handle_node_tool_input :: proc() {
     if rl.IsMouseButtonPressed(.LEFT) {
-        canvas_create_new_node(canvas, canvas.possible_node_position)
+        canvas_create_new_node(canvas.possible_node_position)
     }
 }
 
-canvas_create_new_node :: proc(canvas: ^Canvas, position: rl.Vector2) {
+canvas_create_new_node :: proc(position: rl.Vector2) {
     possible_point := point_from_vector(position)
 
     if !(possible_point in canvas.nodes) {
@@ -318,7 +299,7 @@ canvas_create_new_node :: proc(canvas: ^Canvas, position: rl.Vector2) {
     }
 }
 
-canvas_handle_path_tool_input :: proc(canvas: ^Canvas) {
+canvas_handle_path_tool_input :: proc() {
     using canvas
 
     if rl.IsMouseButtonPressed(.LEFT) {
@@ -340,7 +321,7 @@ canvas_handle_path_tool_input :: proc(canvas: ^Canvas) {
     }
 }
 
-canvas_update_camera :: proc(canvas: ^Canvas) {
+canvas_update_camera :: proc() {
     using canvas
 
     camera.zoom += (f32(rl.GetMouseWheelMove()) * ZOOM_SPEED)
@@ -353,8 +334,8 @@ canvas_update_camera :: proc(canvas: ^Canvas) {
     }
 }
 
-canvas_update_possible_node_position :: proc(canvas: ^Canvas) {
-    pos := canvas_get_relative_mouse_position(canvas)
+canvas_update_possible_node_position :: proc() {
+    pos := canvas_get_relative_mouse_position()
 
     offset_x := math.mod_f32(pos.x, f32(NODE_SEPARATION))
     offset_y := math.mod_f32(pos.y, f32(NODE_SEPARATION))
@@ -372,7 +353,7 @@ canvas_update_possible_node_position :: proc(canvas: ^Canvas) {
     canvas.possible_node_position = pos
 }
 
-canvas_get_relative_mouse_position :: proc(canvas: ^Canvas) -> rl.Vector2 {
+canvas_get_relative_mouse_position :: proc() -> rl.Vector2 {
     using canvas
 
     camera_position := camera.target - camera.offset

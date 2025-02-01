@@ -37,13 +37,13 @@ main :: proc() {
 
     notes_init()
 
-    canvas := canvas_new()
-    defer canvas_free(canvas)
+    canvas_init()
+    defer canvas_deinit()
 
     for !rl.WindowShouldClose() {
         rl.BeginDrawing()
-        canvas_draw(canvas)
-        canvas_update(canvas)
+        canvas_draw()
+        canvas_update()
         rl.EndDrawing()
     }
 
