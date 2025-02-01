@@ -86,6 +86,15 @@ canvas_stop_playing :: proc() {
     clear(&canvas.active_paths)
 }
 
+canvas_start_playing :: proc() {
+    canvas.playing = true
+    for _, node in canvas.nodes {
+        if node.begining {
+            node_play(node)
+        }
+    }
+}
+
 canvas_draw_possible_elements :: proc() {
     switch canvas.tool_selected {
     case .MOUSE_TOOL:
@@ -203,6 +212,9 @@ canvas_update :: proc() {
     }
 
     canvas_clear_node_delete_queue()
+    if len(active_paths) == 0 {
+        canvas_stop_playing()
+    }
 }
 
 canvas_handle_input :: proc() {
