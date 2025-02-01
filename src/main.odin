@@ -2,6 +2,7 @@ package main
 
 import "core:log"
 import "core:mem"
+import "core:thread"
 import rl "vendor:raylib"
 
 print_memory_leaks_and_cleanup :: proc(track: ^mem.Tracking_Allocator) {
@@ -36,6 +37,9 @@ main :: proc() {
     rl.InitAudioDevice()
 
     notes_init()
+
+    metronome_thread_init()
+    defer metronome_thread_deinit()
 
     canvas_init()
     defer canvas_deinit()

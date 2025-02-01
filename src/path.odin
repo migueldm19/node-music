@@ -14,13 +14,11 @@ Direction :: enum {
 
 Path :: struct {
     start, end: ^Node,
+    distance: i16,
 
     active: bool,
-    distance: i16,
-    seconds_between_subbeats: f64,
 
-    activation_time: time.Time,
-    elapsed_seconds: f64,
+    ping_count: i16
 }
 
 path_new :: proc(start, end: ^Node) -> ^Path {
@@ -30,7 +28,7 @@ path_new :: proc(start, end: ^Node) -> ^Path {
     path.end = end
 
     path.active = false
-    path.seconds_between_subbeats = (60.0 / BPM) / f64(SUBDIVISION)
+    path.ping_count = 0
 
     path_set_distance(path)
 
@@ -61,27 +59,30 @@ path_draw :: proc(path: ^Path) {
         start_position,
         end_position,
         active,
-        elapsed_seconds / seconds_between_subbeats
     )
 }
 
 path_update :: proc(path: ^Path) {
     using path
 
-    if !active do return
+    if !path.active do return
 
-    elapsed_time := time.since(activation_time)
-    elapsed_seconds = time.duration_seconds(elapsed_time)
+    ping_count += 1
 
-    if elapsed_seconds > seconds_between_subbeats * f64(distance) {
+    if ping_count >= distance {
+        path_deactivate(path)
         node_play(end)
-        active = false
     }
 }
 
-path_activate :: proc(path: ^Path) {
-    using path
+path_deactivate :: proc(path: ^Path) {
+    path.active = false
+    path.ping_count = 0
+}
 
-    activation_time = time.now()
-    active = true
+path_activate :: proc(path: ^Path) {
+    path.ping_count = 0
+    path.active = true
+    log.info("Adding path to active paths array")
+    canvas_add_active_path(path)
 }

@@ -91,12 +91,6 @@ node_play :: proc(node: ^Node) {
     }
 }
 
-node_stop :: proc(node: ^Node) {
-    for path in node.next_paths {
-        path.active = false
-    }
-}
-
 node_update :: proc(node: ^Node) {
     using node
 
@@ -105,6 +99,5 @@ node_update :: proc(node: ^Node) {
             path_free(path)
             unordered_remove(&next_paths, idx)
         }
-        path_update(path)
     }
 }

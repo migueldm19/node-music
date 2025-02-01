@@ -47,18 +47,20 @@ get_direction :: proc(start_position, end_position: rl.Vector2) -> Direction {
     return dir
 }
 
-draw_path :: proc(start, end: rl.Vector2, active: bool = false, progress: f64 = 0.0) {
+draw_path :: proc(start, end: rl.Vector2, active: bool = false) {
     start_position := start
     end_position := end
 
     direction := get_direction(start, end)
+
+    color := ACTIVE_PATH_COLOR if active else UNACTIVE_PATH_COLOR
 
     if start_position.x != end_position.x {
         rl.DrawLineEx(
             start_position,
             {end_position.x, start_position.y},
             PATH_THICKNESS,
-            PATH_COLOR
+            color
         )
         start_position = rl.Vector2{end_position.x, start_position.y}
     }
@@ -75,9 +77,9 @@ draw_path :: proc(start, end: rl.Vector2, active: bool = false, progress: f64 = 
             start_position,
             {start_position.x, end_position.y},
             PATH_THICKNESS,
-            PATH_COLOR
+            color
         );
     }
 
-    draw_arrow_point(end_position, direction, PATH_THICKNESS, PATH_COLOR)
+    draw_arrow_point(end_position, direction, PATH_THICKNESS, color)
 }

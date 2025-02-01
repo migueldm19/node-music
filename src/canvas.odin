@@ -21,6 +21,8 @@ Canvas :: struct {
     nodes: map[Point]^Node,
     node_delete_queue: [dynamic]^Node,
 
+    active_paths: [dynamic]^Path,
+
     possible_node_position: rl.Vector2,
 
     tool_selected: Tool,
@@ -48,6 +50,8 @@ canvas_init :: proc() {
 
     nodes = make(map[Point]^Node)
     node_delete_queue = make([dynamic]^Node)
+
+    active_paths = make([dynamic]^Path, 0, 30)
 }
 
 canvas_deinit :: proc() {
@@ -60,6 +64,7 @@ canvas_deinit :: proc() {
 
     delete(nodes)
     delete(node_delete_queue)
+    delete(active_paths)
     free(canvas)
 }
 
@@ -79,10 +84,7 @@ canvas_draw_and_update_ui :: proc() {
 
     if canvas.playing {
         if rl.GuiButton(rl.Rectangle{800, 30, 30, 30}, "Stop") {
-            canvas.playing = false
-            for _, node in canvas.nodes {
-                node_stop(node)
-            }
+            canvas_stop_playing()
         }
     } else {
         if rl.GuiButton(rl.Rectangle{800, 30, 30, 30}, "Play") {
@@ -95,6 +97,14 @@ canvas_draw_and_update_ui :: proc() {
         }
     }
 
+}
+
+canvas_stop_playing :: proc() {
+    canvas.playing = false
+    for path in canvas.active_paths {
+        path_deactivate(path)
+    }
+    clear(&canvas.active_paths)
 }
 
 canvas_draw_possible_elements :: proc() {
@@ -267,6 +277,7 @@ canvas_unselect_all_nodes :: proc() {
 }
 
 canvas_delete_all_selected_nodes :: proc() {
+    canvas_stop_playing()
     for point, node in canvas.nodes {
         if node.selected {
             node.deleted = true
@@ -360,4 +371,20 @@ canvas_get_relative_mouse_position :: proc() -> rl.Vector2 {
     position := rl.GetMousePosition()
 
     return position + camera_position
+}
+
+canvas_add_active_path :: proc(path: ^Path) {
+    append(&canvas.active_paths, path)
+}
+
+canvas_metronome_ping :: proc() {
+    active_paths_slice := canvas.active_paths[:]
+    clear(&canvas.active_paths)
+
+    for path in active_paths_slice {
+        path_update(path)
+        if path.active {
+            canvas_add_active_path(path)
+        }
+    }
 }
