@@ -12,6 +12,7 @@ Node :: struct {
     selected: bool,
     deleted: bool,
     begining: bool,
+    current_note: Note,
 }
 
 node_new :: proc(point: Point) -> ^Node {
@@ -19,6 +20,7 @@ node_new :: proc(point: Point) -> ^Node {
     node.point = point
 
     node.sound = get_note_sound(.LA)
+    node.current_note = .LA
 
     node.next_paths = make([dynamic]^Path)
 
@@ -36,6 +38,30 @@ node_free :: proc(node: ^Node) {
 
     delete(node.next_paths)
     free(node)
+}
+
+node_change_note :: proc(node: ^Node, note: Note) {
+    rl.UnloadSound(node.sound)
+    node.sound = get_note_sound(note)
+    node.current_note = note
+}
+
+node_inc_note :: proc(node: ^Node) {
+    node.current_note += Note(1)
+    if node.current_note == .NOTES_END {
+        node.current_note = .NOTES_BEGINING + Note(1)
+    }
+
+    node_change_note(node, node.current_note)
+}
+
+node_dec_note :: proc(node: ^Node) {
+    node.current_note -= Note(1)
+    if node.current_note == .NOTES_BEGINING {
+        node.current_note = .NOTES_END - Note(1)
+    }
+
+    node_change_note(node, node.current_note)
 }
 
 node_draw :: proc(node: ^Node) {
@@ -58,6 +84,17 @@ node_draw :: proc(node: ^Node) {
             color
         )
     }
+
+    note_text_position_x := i32(position.x) + NODE_RADIUS + NODE_NOTE_TEXT_OFFSET
+    note_text_position_y := i32(position.y) - NODE_RADIUS - NODE_NOTE_TEXT_OFFSET
+
+    rl.DrawText(
+        note_to_string(current_note),
+        note_text_position_x,
+        note_text_position_y,
+        NODE_NOTE_TEXT_SIZE,
+        rl.BLACK
+    )
 
     if selected {
         position = position - NODE_RADIUS

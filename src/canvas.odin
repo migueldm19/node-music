@@ -251,6 +251,31 @@ canvas_handle_mouse_tool_input :: proc() {
     if rl.IsKeyPressed(.SPACE) {
         canvas_set_begining_nodes()
     }
+
+    if rl.IsKeyPressed(.UP) {
+        canvas_inc_all_selected_nodes()
+    }
+
+    if rl.IsKeyPressed(.DOWN) {
+        canvas_dec_all_selected_nodes()
+    }
+}
+
+canvas_inc_all_selected_nodes :: proc() {
+    for _, node in canvas.nodes {
+        if node.selected {
+            node_inc_note(node)
+        }
+    }
+}
+
+
+canvas_dec_all_selected_nodes :: proc() {
+    for _, node in canvas.nodes {
+        if node.selected {
+            node_dec_note(node)
+        }
+    }
 }
 
 canvas_set_begining_nodes :: proc() {

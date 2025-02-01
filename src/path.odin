@@ -83,6 +83,5 @@ path_deactivate :: proc(path: ^Path) {
 path_activate :: proc(path: ^Path) {
     path.ping_count = 0
     path.active = true
-    log.info("Adding path to active paths array")
     canvas_add_active_path(path)
 }

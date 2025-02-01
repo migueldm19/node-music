@@ -5,6 +5,7 @@ import "core:math"
 import rl "vendor:raylib"
 
 Note :: enum {
+	NOTES_BEGINING,
 	DO,
 	DOS,
 	RE,
@@ -17,6 +18,7 @@ Note :: enum {
 	LA,
 	LAS,
 	SI,
+	NOTES_END,
 }
 
 N_SAMPLES :: 1000
@@ -40,6 +42,27 @@ get_wave :: proc(frequency: f32) -> [dynamic]f32 {
 }
 
 NOTES: [Note][dynamic]f32
+
+NOTE_STRINGS := [Note]cstring {
+	.NOTES_BEGINING = "None",
+	.DO = "Do",
+	.DOS = "Do#/Reb",
+	.RE = "Re",
+	.RES = "Re#/Mib",
+	.MI = "Mi",
+	.FA = "Fa",
+	.FAS = "Fa#/Solb",
+	.SOL = "Sol",
+	.SOLS = "Sol#/Lab",
+	.LA = "La",
+	.LAS = "La#/Sib",
+	.SI = "Si",
+	.NOTES_END = "None",
+}
+
+note_to_string :: proc(note: Note) -> cstring {
+	return NOTE_STRINGS[note]
+}
 
 notes_init :: proc() {
 	NOTES[.DO] = get_wave(261.63)
