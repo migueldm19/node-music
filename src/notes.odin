@@ -39,11 +39,9 @@ get_wave :: proc(frequency: f32) -> [dynamic]f32 {
 	return wav
 }
 
-NOTES: map[Note][dynamic]f32
+NOTES: [Note][dynamic]f32
 
 notes_init :: proc() {
-	NOTES = make(map[Note][dynamic]f32)
-
 	NOTES[.DO] = get_wave(261.63)
 	NOTES[.DOS] = get_wave(277.18)
 	NOTES[.RE] = get_wave(293.66)
@@ -71,8 +69,6 @@ notes_free :: proc() {
 	delete(NOTES[.LA])
 	delete(NOTES[.LAS])
 	delete(NOTES[.SI])
-
-	delete(NOTES)
 }
 
 get_note_sound :: proc(note: Note) -> rl.Sound {
