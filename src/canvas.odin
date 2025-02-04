@@ -3,6 +3,7 @@ package main
 import rl "vendor:raylib"
 import "core:math"
 import "core:log"
+import "core:sync"
 
 Tool :: enum i32 {
     MOUSE_TOOL,
@@ -22,6 +23,7 @@ Canvas :: struct {
     node_delete_queue: [dynamic]^Node,
 
     active_paths: [dynamic]^Path,
+    active_paths_mutex: sync.Mutex,
 
     possible_node_position: rl.Vector2,
 
@@ -390,7 +392,9 @@ canvas_get_relative_mouse_position :: proc() -> rl.Vector2 {
 }
 
 canvas_add_active_path :: proc(path: ^Path) {
+    sync.mutex_lock(&canvas.active_paths_mutex)
     append(&canvas.active_paths, path)
+    sync.mutex_unlock(&canvas.active_paths_mutex)
 }
 
 canvas_metronome_ping :: proc() {
