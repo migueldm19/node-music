@@ -1,6 +1,7 @@
 package main
 
 import rl "vendor:raylib"
+import mu "vendor:microui"
 import "core:math"
 import "core:log"
 import "core:sync"
@@ -30,8 +31,16 @@ Canvas :: struct {
     tool_selected: Tool,
 
     selected_node_for_path: ^Node,
+    selected_node: ^Node,
 
     playing: bool,
+
+    gui_state: struct {
+        mu_ctx: mu.Context,
+
+        pixels: [][4]u8,
+        atlas_texture: rl.Texture2D,
+    },
 }
 
 canvas: ^Canvas
@@ -54,6 +63,7 @@ canvas_init :: proc() {
     node_delete_queue = make([dynamic]^Node)
 
     active_paths = make([dynamic]^Path, 0, 30)
+    canvas_gui_init()
 }
 
 canvas_deinit :: proc() {
@@ -67,6 +77,7 @@ canvas_deinit :: proc() {
     delete(nodes)
     delete(node_delete_queue)
     delete(active_paths)
+    canvas_gui_deinit()
     free(canvas)
 }
 
@@ -112,6 +123,10 @@ canvas_draw_possible_elements :: proc() {
 canvas_draw_nodes :: proc() {
     for _, node in canvas.nodes {
         node_draw(node)
+    }
+
+    if canvas.selected_node != nil {
+        node_draw_being_edited(canvas.selected_node)
     }
 }
 
@@ -257,6 +272,10 @@ canvas_delete_all_selected_nodes :: proc() {
             node.deleted = true
             delete_key(&canvas.nodes, point)
             append(&canvas.node_delete_queue, node)
+
+            if node == canvas.selected_node {
+                canvas.selected_node = nil
+            }
         }
     }
 }

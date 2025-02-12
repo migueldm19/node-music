@@ -113,6 +113,18 @@ node_draw :: proc(node: ^Node) {
     }
 }
 
+node_draw_being_edited :: proc(node: ^Node) {
+    using node
+    position := point_get_position(point)
+
+    rl.DrawCircle(
+        i32(position.x),
+        i32(position.y),
+        NODE_RADIUS,
+        rl.ColorAlpha(NODE_BEING_EDITED_COLOR, 0.3)
+    )
+}
+
 node_add_path :: proc(node: ^Node, path: ^Path) {
     using node
     append(&next_paths, path)

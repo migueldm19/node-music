@@ -1,5 +1,7 @@
 package main
 
+import rl "vendor:raylib"
+
 canvas_handle_input :: proc() {
     switch canvas.tool_selected {
     case .NODE_TOOL:
@@ -17,7 +19,8 @@ canvas_handle_mouse_tool_input :: proc() {
     if rl.IsMouseButtonPressed(.LEFT) {
         possible_point := point_from_vector(possible_node_position)
 
-        if !rl.IsKeyDown(.LEFT_CONTROL) && !rl.IsKeyDown(.RIGHT_CONTROL) {
+        monoselection := !rl.IsKeyDown(.LEFT_CONTROL) && !rl.IsKeyDown(.RIGHT_CONTROL)
+        if monoselection {
             canvas_unselect_all_nodes()
         }
 
@@ -25,6 +28,10 @@ canvas_handle_mouse_tool_input :: proc() {
         if !ok do return
 
         possible_node.selected = true
+
+        if monoselection {
+            selected_node = possible_node if selected_node != possible_node else nil
+        }
     }
 
     if rl.IsKeyPressed(.DELETE) {
