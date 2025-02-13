@@ -88,14 +88,6 @@ node_draw :: proc(node: ^Node) {
     note_text_position_x := i32(position.x) + NODE_RADIUS + NODE_NOTE_TEXT_OFFSET
     note_text_position_y := i32(position.y) - NODE_RADIUS - NODE_NOTE_TEXT_OFFSET
 
-    rl.DrawText(
-        note_to_string(current_note),
-        note_text_position_x,
-        note_text_position_y,
-        NODE_NOTE_TEXT_SIZE,
-        rl.BLACK
-    )
-
     if selected {
         position = position - NODE_RADIUS
 

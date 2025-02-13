@@ -4,6 +4,7 @@ import rl "vendor:raylib"
 import mu "vendor:microui"
 import "core:log"
 import "core:unicode/utf8"
+import "core:fmt"
 
 PLAY_BUTTON :: "#131#"
 STOP_BUTTON :: "#133#"
@@ -43,8 +44,13 @@ canvas_gui_play_stop :: proc() {
 canvas_gui_node :: proc() {
     ctx := &canvas.gui_state.mu_ctx
     if canvas.selected_node != nil {
-        if mu.window(ctx, "Node", {40, 40, 300, 450}, mu.Options{.NO_CLOSE}) {
+        if mu.window(ctx, "Node", {40, 40, 300, 100}, mu.Options{.NO_CLOSE}) {
+            mu.layout_row(ctx, {0, 0, 0}, 0)
+            if .SUBMIT in mu.button(ctx, "Decrease note") { node_dec_note(canvas.selected_node) }
+            mu.label(ctx, note_to_string(canvas.selected_node.current_note))
+            if .SUBMIT in mu.button(ctx, "Increase note") { node_inc_note(canvas.selected_node) }
 
+            mu.checkbox(ctx, "Begining", &canvas.selected_node.begining)
         }
     }
 }
