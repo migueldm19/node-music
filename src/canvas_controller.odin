@@ -72,6 +72,7 @@ canvas_handle_path_tool_input :: proc() {
         if selected_node_for_path == nil {
             selected_node_for_path = possible_node
         } else {
+            if selected_node_for_path == possible_node do return
             path := path_new(selected_node_for_path, possible_node)
             node_add_path(selected_node_for_path, path)
             selected_node_for_path = nil
