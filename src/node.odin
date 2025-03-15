@@ -65,13 +65,11 @@ node_dec_note :: proc(node: ^Node) {
 }
 
 node_draw :: proc(node: ^Node) {
-    using node
+    position := point_get_position(node.point)
 
-    position := point_get_position(point)
+    color := BEGIN_NODE_COLOR if node.begining else NODE_COLOR
 
-    color := BEGIN_NODE_COLOR if begining else NODE_COLOR
-
-    if(rl.IsSoundPlaying(sound)) {
+    if(rl.IsSoundPlaying(node.sound)) {
         rl.DrawCircleV(
             position,
             NODE_RADIUS,
@@ -88,7 +86,7 @@ node_draw :: proc(node: ^Node) {
     note_text_position_x := i32(position.x) + NODE_RADIUS + NODE_NOTE_TEXT_OFFSET
     note_text_position_y := i32(position.y) - NODE_RADIUS - NODE_NOTE_TEXT_OFFSET
 
-    if selected {
+    if node.selected {
         position = position - NODE_RADIUS
 
         rl.DrawRectangleRoundedLines(
@@ -100,14 +98,13 @@ node_draw :: proc(node: ^Node) {
         )
     }
 
-    for path in next_paths {
+    for path in node.next_paths {
         path_draw(path)
     }
 }
 
 node_draw_being_edited :: proc(node: ^Node) {
-    using node
-    position := point_get_position(point)
+    position := point_get_position(node.point)
 
     rl.DrawCircle(
         i32(position.x),
@@ -118,27 +115,22 @@ node_draw_being_edited :: proc(node: ^Node) {
 }
 
 node_add_path :: proc(node: ^Node, path: ^Path) {
-    using node
-    append(&next_paths, path)
+    append(&node.next_paths, path)
 }
 
 node_play :: proc(node: ^Node) {
-    using node
+    rl.PlaySound(node.sound)
 
-    rl.PlaySound(sound)
-
-    for path in next_paths {
+    for path in node.next_paths {
         path_activate(path)
     }
 }
 
 node_update :: proc(node: ^Node) {
-    using node
-
-    for path, idx in next_paths {
+    for path, idx in node.next_paths {
         if path.end.deleted {
             path_free(path)
-            unordered_remove(&next_paths, idx)
+            unordered_remove(&node.next_paths, idx)
         }
     }
 }

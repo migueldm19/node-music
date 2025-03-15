@@ -26,7 +26,7 @@ canvas_gui_draw_and_update :: proc() {
 }
 
 canvas_gui_tool_selection :: proc() {
-	rl.GuiToggleGroup(rl.Rectangle{30, 30, 120, 30}, TOOLS, (^i32)(&canvas.tool_selected))
+    rl.GuiToggleGroup(rl.Rectangle{30, 30, 120, 30}, TOOLS, (^i32)(&canvas.tool_selected))
 }
 
 canvas_gui_play_stop :: proc() {
@@ -56,33 +56,29 @@ canvas_gui_node :: proc() {
 }
 
 canvas_gui_init :: proc() {
-    using canvas
-
-    gui_state.pixels = make([][4]u8, mu.DEFAULT_ATLAS_WIDTH * mu.DEFAULT_ATLAS_HEIGHT)
+    canvas.gui_state.pixels = make([][4]u8, mu.DEFAULT_ATLAS_WIDTH * mu.DEFAULT_ATLAS_HEIGHT)
     for alpha, i in mu.default_atlas_alpha {
-        gui_state.pixels[i] = {0xff, 0xff, 0xff, alpha}
+        canvas.gui_state.pixels[i] = {0xff, 0xff, 0xff, alpha}
     }
 
     image := rl.Image {
-        data = raw_data(gui_state.pixels),
+        data = raw_data(canvas.gui_state.pixels),
         width = mu.DEFAULT_ATLAS_WIDTH,
         height = mu.DEFAULT_ATLAS_HEIGHT,
         mipmaps = 1,
         format = .UNCOMPRESSED_R8G8B8A8,
     }
-    gui_state.atlas_texture = rl.LoadTextureFromImage(image)
+    canvas.gui_state.atlas_texture = rl.LoadTextureFromImage(image)
 
-    mu.init(&gui_state.mu_ctx)
+    mu.init(&canvas.gui_state.mu_ctx)
 
-    gui_state.mu_ctx.text_width = mu.default_atlas_text_width
-    gui_state.mu_ctx.text_height = mu.default_atlas_text_height
+    canvas.gui_state.mu_ctx.text_width = mu.default_atlas_text_width
+    canvas.gui_state.mu_ctx.text_height = mu.default_atlas_text_height
 }
 
 canvas_gui_deinit :: proc() {
-    using canvas
-
     //rl.UnloadTexture(gui_state.atlas_texture) TODO: investigate seg fault
-    delete(gui_state.pixels)
+    delete(canvas.gui_state.pixels)
 }
 
 canvas_gui_get_input :: proc() {
@@ -204,4 +200,3 @@ canvas_gui_render :: proc() {
         }
     }
 }
-

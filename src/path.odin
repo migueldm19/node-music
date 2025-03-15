@@ -41,37 +41,31 @@ path_free :: proc(path: ^Path) {
 }
 
 path_set_distance :: proc(path: ^Path) {
-    using path
-
-    distance_x := math.abs(end.point.x - start.point.x)
-    distance_y := math.abs(end.point.y - start.point.y)
+    distance_x := math.abs(path.end.point.x - path.start.point.x)
+    distance_y := math.abs(path.end.point.y - path.start.point.y)
 
     path.distance = distance_x + distance_y
 }
 
 path_draw :: proc(path: ^Path) {
-    using path
-
-    start_position := point_get_position(start.point)
-    end_position := point_get_position(end.point)
+    start_position := point_get_position(path.start.point)
+    end_position := point_get_position(path.end.point)
 
     draw_path(
         start_position,
         end_position,
-        active,
+        path.active,
     )
 }
 
 path_update :: proc(path: ^Path) {
-    using path
-
     if !path.active do return
 
-    ping_count += 1
+    path.ping_count += 1
 
-    if ping_count >= distance {
+    if path.ping_count >= path.distance {
         path_deactivate(path)
-        node_play(end)
+        node_play(path.end)
     }
 }
 
