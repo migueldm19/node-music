@@ -23,14 +23,14 @@ print_memory_leaks_and_cleanup :: proc(track: ^mem.Tracking_Allocator) {
 
 main :: proc() {
     when ODIN_DEBUG {
-        context.logger = log.create_console_logger()
-        defer log.destroy_console_logger(context.logger)
-
         track: mem.Tracking_Allocator
         mem.tracking_allocator_init(&track, context.allocator)
         context.allocator = mem.tracking_allocator(&track)
         defer print_memory_leaks_and_cleanup(&track)
     }
+
+    context.logger = log.create_console_logger()
+    defer log.destroy_console_logger(context.logger)
 
     rl.InitWindow(1300, 900, "Nodal music")
     rl.InitAudioDevice()

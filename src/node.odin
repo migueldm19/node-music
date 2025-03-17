@@ -28,7 +28,7 @@ node_new :: proc(point: Point) -> ^Node {
 }
 
 node_free :: proc(node: ^Node) {
-    log.info("Freeing node")
+    log.debug("Freeing node")
 
     rl.UnloadSound(node.sound)
 

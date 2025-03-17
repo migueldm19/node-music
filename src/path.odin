@@ -36,7 +36,7 @@ path_new :: proc(start, end: ^Node) -> ^Path {
 }
 
 path_free :: proc(path: ^Path) {
-    log.info("Freeing path")
+    log.debug("Freeing path")
     free(path)
 }
 

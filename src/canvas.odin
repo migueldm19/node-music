@@ -59,7 +59,7 @@ canvas_init :: proc() {
 }
 
 canvas_deinit :: proc() {
-    log.info("Freeing canvas")
+    log.debug("Freeing canvas")
 
     for _, node in canvas.nodes {
         node_free(node)

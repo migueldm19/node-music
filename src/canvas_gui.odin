@@ -46,8 +46,8 @@ canvas_gui_node :: proc() {
             imgui.Text(note_to_string(canvas.selected_node.current_note))
             if imgui.Button("Increase note") { node_inc_note(canvas.selected_node) }
             imgui.Checkbox("Begining", &canvas.selected_node.begining)
+            imgui.End()
         }
-        imgui.End()
     }
 }
 
