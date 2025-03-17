@@ -1,7 +1,7 @@
 package main
 
 import rl "vendor:raylib"
-import mu "vendor:microui"
+import imgui "../deps/odin-imgui"
 import "core:math"
 import "core:log"
 import "core:sync"
@@ -34,13 +34,6 @@ Canvas :: struct {
     selected_node: ^Node,
 
     playing: bool,
-
-    gui_state: struct {
-        mu_ctx: mu.Context,
-
-        pixels: [][4]u8,
-        atlas_texture: rl.Texture2D,
-    },
 }
 
 canvas: ^Canvas

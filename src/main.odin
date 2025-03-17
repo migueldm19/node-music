@@ -32,7 +32,6 @@ main :: proc() {
         defer print_memory_leaks_and_cleanup(&track)
     }
 
-
     rl.InitWindow(1300, 900, "Nodal music")
     rl.InitAudioDevice()
 

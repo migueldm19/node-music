@@ -43,7 +43,7 @@ get_wave :: proc(frequency: f32) -> [dynamic]f32 {
 
 NOTES: [Note][dynamic]f32
 
-NOTE_STRINGS := [Note]string {
+NOTE_STRINGS := [Note]cstring {
 	.NOTES_BEGINING = "None",
 	.DO = "Do",
 	.DOS = "Do#/Reb",
@@ -60,7 +60,7 @@ NOTE_STRINGS := [Note]string {
 	.NOTES_END = "None",
 }
 
-note_to_string :: proc(note: Note) -> string {
+note_to_string :: proc(note: Note) -> cstring {
 	return NOTE_STRINGS[note]
 }
 
