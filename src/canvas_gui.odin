@@ -17,9 +17,7 @@ canvas_gui_draw_and_update :: proc() {
     canvas_gui_play_stop()
 
     canvas_gui_begin()
-
-    canvas_gui_node()
-
+        canvas_gui_node()
     canvas_gui_end()
 }
 
@@ -40,12 +38,13 @@ canvas_gui_play_stop :: proc() {
 }
 
 canvas_gui_node :: proc() {
-    if canvas.selected_node != nil {
+    if node := canvas.selected_node; node != nil {
         if imgui.Begin("Node") {
-            if imgui.Button("Decrease note") { node_dec_note(canvas.selected_node) }
-            imgui.Text(note_to_string(canvas.selected_node.current_note))
-            if imgui.Button("Increase note") { node_inc_note(canvas.selected_node) }
-            imgui.Checkbox("Begining", &canvas.selected_node.begining)
+            if imgui.Button("Decrease note") do node_dec_note(node)
+            imgui.Text(note_to_string(node.current_note))
+            if imgui.Button("Increase note") do node_inc_note(node)
+            imgui.Checkbox("Begining", &node.begining)
+
             imgui.End()
         }
     }
