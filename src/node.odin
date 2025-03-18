@@ -5,7 +5,6 @@ import "core:log"
 
 Node :: struct {
     point: Point,
-    sound: rl.Sound,
 
     next_paths: [dynamic]^Path,
 
@@ -19,7 +18,6 @@ node_new :: proc(point: Point) -> ^Node {
     node := new(Node)
     node.point = point
 
-    node.sound = get_note_sound(.LA)
     node.current_note = .LA
 
     node.next_paths = make([dynamic]^Path)
@@ -30,8 +28,6 @@ node_new :: proc(point: Point) -> ^Node {
 node_free :: proc(node: ^Node) {
     log.debug("Freeing node")
 
-    rl.UnloadSound(node.sound)
-
     for path in node.next_paths {
         path_free(path)
     }
@@ -41,8 +37,6 @@ node_free :: proc(node: ^Node) {
 }
 
 node_change_note :: proc(node: ^Node, note: Note) {
-    rl.UnloadSound(node.sound)
-    node.sound = get_note_sound(note)
     node.current_note = note
 }
 
@@ -69,19 +63,19 @@ node_draw :: proc(node: ^Node) {
 
     color := BEGIN_NODE_COLOR if node.begining else NODE_COLOR
 
-    if(rl.IsSoundPlaying(node.sound)) {
-        rl.DrawCircleV(
-            position,
-            NODE_RADIUS,
-            color
-        )
-    } else {
+    // if(rl.IsSoundPlaying(node.sound)) {
+    //     rl.DrawCircleV(
+    //         position,
+    //         NODE_RADIUS,
+    //         color
+    //     )
+    // } else {
         rl.DrawCircleLinesV(
             position,
             NODE_RADIUS,
             color
         )
-    }
+    //}
 
     note_text_position_x := i32(position.x) + NODE_RADIUS + NODE_NOTE_TEXT_OFFSET
     note_text_position_y := i32(position.y) - NODE_RADIUS - NODE_NOTE_TEXT_OFFSET
@@ -119,7 +113,7 @@ node_add_path :: proc(node: ^Node, path: ^Path) {
 }
 
 node_play :: proc(node: ^Node) {
-    rl.PlaySound(node.sound)
+    midi_play_note(node.current_note)
 
     for path in node.next_paths {
         path_activate(path)

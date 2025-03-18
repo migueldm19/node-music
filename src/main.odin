@@ -33,9 +33,13 @@ main :: proc() {
     defer log.destroy_console_logger(context.logger)
 
     rl.InitWindow(1300, 900, "Nodal music")
-    rl.InitAudioDevice()
+    defer rl.CloseWindow()
 
-    notes_init()
+    rl.InitAudioDevice()
+    defer rl.CloseAudioDevice()
+
+    midi_init()
+    defer midi_deinit()
 
     metronome_thread_init()
     defer metronome_thread_deinit()
@@ -49,8 +53,4 @@ main :: proc() {
         canvas_update()
         rl.EndDrawing()
     }
-
-    notes_free()
-    rl.CloseAudioDevice()
-    rl.CloseWindow()
 }
