@@ -40,9 +40,9 @@ canvas_gui_play_stop :: proc() {
 canvas_gui_node :: proc() {
     if node := canvas.selected_node; node != nil {
         if imgui.Begin("Node") {
-            if imgui.Button("Decrease note") do node_dec_note(node)
-            imgui.Text(note_to_string(node.current_note))
             if imgui.Button("Increase note") do node_inc_note(node)
+            imgui.Text(note_to_string(node.current_note))
+            if imgui.Button("Decrease note") do node_dec_note(node)
             imgui.Checkbox("Begining", &node.begining)
 
             imgui.End()

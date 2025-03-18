@@ -27,7 +27,6 @@ metronome_thread_proc :: proc(t: ^thread.Thread) {
 
     for {
         time.accurate_sleep(nanoseconds_between_subbeats)
-        midi_stop_all_playing_notes()
         canvas_metronome_ping()
-        }
+    }
 }

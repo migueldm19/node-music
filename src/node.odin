@@ -11,6 +11,8 @@ Node :: struct {
     selected: bool,
     deleted: bool,
     begining: bool,
+    playing: bool,
+
     current_note: Note,
 }
 
@@ -63,19 +65,19 @@ node_draw :: proc(node: ^Node) {
 
     color := BEGIN_NODE_COLOR if node.begining else NODE_COLOR
 
-    // if(rl.IsSoundPlaying(node.sound)) {
-    //     rl.DrawCircleV(
-    //         position,
-    //         NODE_RADIUS,
-    //         color
-    //     )
-    // } else {
+    if(node.playing) {
+        rl.DrawCircleV(
+            position,
+            NODE_RADIUS,
+            color
+        )
+    } else {
         rl.DrawCircleLinesV(
             position,
             NODE_RADIUS,
             color
         )
-    //}
+    }
 
     note_text_position_x := i32(position.x) + NODE_RADIUS + NODE_NOTE_TEXT_OFFSET
     note_text_position_y := i32(position.y) - NODE_RADIUS - NODE_NOTE_TEXT_OFFSET
@@ -114,10 +116,20 @@ node_add_path :: proc(node: ^Node, path: ^Path) {
 
 node_play :: proc(node: ^Node) {
     midi_play_note(node.current_note)
+    node.playing = true
+
+    if len(node.next_paths) == 0 {
+        canvas_schedule_node_stop(node)
+    }
 
     for path in node.next_paths {
         path_activate(path)
     }
+}
+
+node_stop_playing :: proc(node: ^Node) {
+    node.playing = false
+    midi_stop_note(node.current_note)
 }
 
 node_update :: proc(node: ^Node) {

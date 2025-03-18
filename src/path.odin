@@ -72,6 +72,7 @@ path_update :: proc(path: ^Path) {
 path_deactivate :: proc(path: ^Path) {
     path.active = false
     path.ping_count = 0
+    node_stop_playing(path.start)
 }
 
 path_activate :: proc(path: ^Path) {

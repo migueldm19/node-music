@@ -22,6 +22,7 @@ Canvas :: struct {
 
     nodes: map[Point]^Node,
     node_delete_queue: [dynamic]^Node,
+    node_stop_queue: [dynamic]^Node,
 
     active_paths: [dynamic]^Path,
     active_paths_mutex: sync.Mutex,
@@ -53,6 +54,7 @@ canvas_init :: proc() {
 
     canvas.nodes = make(map[Point]^Node)
     canvas.node_delete_queue = make([dynamic]^Node)
+    canvas.node_stop_queue = make([dynamic]^Node)
 
     canvas.active_paths = make([dynamic]^Path, 0, 30)
     canvas_gui_init()
@@ -61,12 +63,14 @@ canvas_init :: proc() {
 canvas_deinit :: proc() {
     log.debug("Freeing canvas")
 
+    canvas_stop_playing()
     for _, node in canvas.nodes {
         node_free(node)
     }
 
     delete(canvas.nodes)
     delete(canvas.node_delete_queue)
+    delete(canvas.node_stop_queue)
     delete(canvas.active_paths)
     canvas_gui_deinit()
     free(canvas)
@@ -82,8 +86,24 @@ canvas_draw :: proc() {
     canvas_gui_draw_and_update()
 }
 
+canvas_stop_playing_nodes :: proc() {
+    node_stop_slice := canvas.node_stop_queue[:]
+    clear(&canvas.node_stop_queue)
+
+    for node in node_stop_slice {
+        node_stop_playing(node)
+    }
+}
+
+canvas_schedule_node_stop :: proc(node: ^Node) {
+    // TODO: mutex?
+    append(&canvas.node_stop_queue, node)
+}
+
 canvas_stop_playing :: proc() {
     canvas.playing = false
+
+    canvas_stop_playing_nodes()
     for path in canvas.active_paths {
         path_deactivate(path)
     }
@@ -324,6 +344,7 @@ canvas_add_active_path :: proc(path: ^Path) {
 }
 
 canvas_metronome_ping :: proc() {
+    canvas_stop_playing_nodes()
     active_paths_slice := canvas.active_paths[:]
     clear(&canvas.active_paths)
 
