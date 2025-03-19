@@ -2,6 +2,7 @@ package main
 
 import rl "vendor:raylib"
 import "core:log"
+import "core:sync"
 
 Node :: struct {
     point: Point,
@@ -11,7 +12,9 @@ Node :: struct {
     selected: bool,
     deleted: bool,
     begining: bool,
+
     playing: bool,
+    playing_mutex: sync.Mutex,
 
     current_note: Note,
 }
@@ -115,6 +118,7 @@ node_add_path :: proc(node: ^Node, path: ^Path) {
 }
 
 node_play :: proc(node: ^Node) {
+    sync.mutex_lock(&node.playing_mutex)
     midi_play_note(node.current_note)
     node.playing = true
 
@@ -125,11 +129,14 @@ node_play :: proc(node: ^Node) {
     for path in node.next_paths {
         path_activate(path)
     }
+    sync.mutex_unlock(&node.playing_mutex)
 }
 
 node_stop_playing :: proc(node: ^Node) {
+    sync.mutex_lock(&node.playing_mutex)
     node.playing = false
     midi_stop_note(node.current_note)
+    sync.mutex_unlock(&node.playing_mutex)
 }
 
 node_update :: proc(node: ^Node) {

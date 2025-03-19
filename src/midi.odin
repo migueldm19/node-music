@@ -89,10 +89,13 @@ midi_deinit :: proc() {
     pm.Terminate()
 }
 
+notes_playing: bit_set[Note]
+
 midi_play_note :: proc(note: Note) {
     note_on: pm.Event
     note_on.timestamp = midi_time_proc()
     note_on.message = pm.MessageCompose(0x90, NOTES[note], 127)
+    notes_playing += {note}
 
     pm.Write(midi_output_stream, &note_on, 1)
 }
@@ -101,6 +104,14 @@ midi_stop_note :: proc(note: Note) {
     note_off: pm.Event
     note_off.timestamp = midi_time_proc()
     note_off.message = pm.MessageCompose(0x80, NOTES[note], 0)
+    notes_playing -= {note}
 
     pm.Write(midi_output_stream, &note_off, 1)
+}
+
+midi_stop_all_notes :: proc() {
+    for note in notes_playing {
+        midi_stop_note(note)
+    }
+    notes_playing = {}
 }
