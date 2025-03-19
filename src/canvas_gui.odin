@@ -44,9 +44,8 @@ canvas_gui_node :: proc() {
             imgui.Text(note_to_string(node.current_note))
             if imgui.Button("Decrease note") do node_dec_note(node)
             imgui.Checkbox("Begining", &node.begining)
-
-            imgui.End()
         }
+        imgui.End()
     }
 }
 
