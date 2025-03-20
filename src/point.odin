@@ -3,7 +3,8 @@ package main
 import rl "vendor:raylib"
 
 Point :: struct {
-    x, y: i16
+    x: i16 `json:"x"`,
+    y: i16 `json:"x"`,
 }
 
 point_from_vector :: proc(position: rl.Vector2) -> Point {

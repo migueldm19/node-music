@@ -13,12 +13,26 @@ Direction :: enum {
 }
 
 Path :: struct {
-    start, end: ^Node,
+    start: ^Node `json:"start"`,
+    end: ^Node `json:"end"`,
     distance: i16,
 
     active: bool,
 
     ping_count: i16
+}
+
+PathData :: struct {
+    start: u16,
+    end: u16,
+}
+
+path_data :: proc(path: ^Path) -> PathData {
+    log.debugf("Generating path %v -> %v data", path.start.id, path.end.id)
+    return PathData {
+        start = path.start.id,
+        end = path.end.id,
+    }
 }
 
 path_new :: proc(start, end: ^Node) -> ^Path {

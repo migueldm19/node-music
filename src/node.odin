@@ -4,7 +4,10 @@ import rl "vendor:raylib"
 import "core:log"
 import "core:sync"
 
+current_node_id: u16 = 0
+
 Node :: struct {
+    id: u16,
     point: Point,
 
     next_paths: [dynamic]^Path,
@@ -19,8 +22,44 @@ Node :: struct {
     current_note: Note,
 }
 
-node_new :: proc(point: Point) -> ^Node {
+NodeData :: struct {
+    id: u16,
+    point: Point,
+    next_paths: [dynamic]PathData,
+    begining: bool,
+    note: Note,
+}
+
+node_get_data :: proc(node: ^Node) -> NodeData {
+    log.debugf("Generating node %v data", node.id)
+    next_paths_data := make([dynamic]PathData, len(node.next_paths))
+
+    for i in 0..<len(node.next_paths) {
+        next_paths_data[i] = path_data(node.next_paths[i])
+    }
+
+    return NodeData {
+        id = node.id,
+        point = node.point,
+        next_paths = next_paths_data,
+        begining = node.begining,
+        note = node.current_note,
+    }
+}
+
+node_data_delete :: proc(node_data: NodeData) {
+    delete(node_data.next_paths)
+}
+
+node_new_with_id :: proc(id: u16, point: Point) -> ^Node {
     node := new(Node)
+
+    node.id = id
+
+    if id <= current_node_id {
+        current_node_id += 1
+    }
+
     node.point = point
 
     node.current_note = .LA
@@ -28,6 +67,10 @@ node_new :: proc(point: Point) -> ^Node {
     node.next_paths = make([dynamic]^Path)
 
     return node
+}
+
+node_new :: proc(point: Point) -> ^Node {
+    return node_new_with_id(current_node_id, point)
 }
 
 node_free :: proc(node: ^Node) {

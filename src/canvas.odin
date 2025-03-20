@@ -5,6 +5,9 @@ import imgui "../deps/odin-imgui"
 import "core:math"
 import "core:log"
 import "core:sync"
+import "core:encoding/json"
+import "core:io"
+import "core:os"
 
 Tool :: enum i32 {
     MOUSE_TOOL,
@@ -38,6 +41,28 @@ Canvas :: struct {
 }
 
 canvas: ^Canvas
+
+CanvasData :: struct {
+    nodes: [dynamic]NodeData,
+}
+
+canvas_get_data :: proc() -> CanvasData {
+    log.debug("Generating canvas data")
+    nodes_data := make([dynamic]NodeData, 0, len(canvas.nodes))
+
+    for _, node in canvas.nodes {
+        append(&nodes_data, node_get_data(node))
+    }
+
+    return CanvasData{ nodes=nodes_data }
+}
+
+canvas_data_delete :: proc(canvas_data: CanvasData) {
+    for node in canvas_data.nodes {
+        node_data_delete(node)
+    }
+    delete(canvas_data.nodes)
+}
 
 canvas_init :: proc() {
     canvas = new(Canvas)
@@ -74,6 +99,40 @@ canvas_deinit :: proc() {
     delete(canvas.active_paths)
     canvas_gui_deinit()
     free(canvas)
+}
+
+canvas_serialize :: proc(path: string) {
+    canvas_data := canvas_get_data()
+    defer canvas_data_delete(canvas_data)
+
+    log.debugf("Marshaling canvas data")
+
+    when ODIN_DEBUG {
+        data, err := json.marshal(canvas_data, {pretty=true})
+    } else {
+        data, err := json.marshal(canvas_data)
+    }
+
+    defer delete(data)
+
+    switch v in err {
+    case io.Error:
+        if v != .None {
+            log.warnf("IO Error trying to serialize canvas: %v", v)
+            return
+        }
+    case json.Marshal_Data_Error:
+        if v != .None {
+            log.warnf("Marshal Error trying to serialize canvas: %v", err)
+            return
+        }
+    }
+
+    log.debugf("Writing canvas data to %v", path)
+    ok := os.write_entire_file(path, data)
+    if !ok {
+        log.warnf("Error writing to file %v", path)
+    }
 }
 
 canvas_draw :: proc() {
