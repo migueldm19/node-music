@@ -8,6 +8,8 @@ import "../deps/odin-imgui/imgui_impl_glfw"
 import "core:log"
 import "core:unicode/utf8"
 import "core:fmt"
+import "core:strings"
+import "core:c"
 
 PLAY_BUTTON :: "#131#"
 STOP_BUTTON :: "#133#"
@@ -17,12 +19,41 @@ canvas_gui_draw_and_update :: proc() {
     canvas_gui_play_stop()
 
     canvas_gui_begin()
+        canvas_gui_menu_bar()
         canvas_gui_node()
     canvas_gui_end()
 }
 
+canvas_gui_menu_bar :: proc() {
+    openSavePopup: bool
+
+    if imgui.BeginMainMenuBar() {
+        if imgui.BeginMenu("File") {
+            openSavePopup = imgui.MenuItem("Save", "Ctrl+S")
+            imgui.EndMenu()
+        }
+
+        if openSavePopup do imgui.OpenPopup("Path")
+        canvas_gui_save_menu()
+
+        imgui.EndMainMenuBar()
+    }
+}
+
+canvas_gui_save_menu :: proc() {
+    if imgui.BeginPopupModal("Path", nil, {.AlwaysAutoResize}) {
+        if imgui.Button("Save") {
+            canvas_serialize("canvas.json")
+        }
+        if imgui.Button("Close") {
+            imgui.CloseCurrentPopup()
+        }
+        imgui.EndPopup()
+    }
+}
+
 canvas_gui_tool_selection :: proc() {
-    rl.GuiToggleGroup(rl.Rectangle{30, 30, 120, 30}, TOOLS, (^i32)(&canvas.tool_selected))
+    rl.GuiToggleGroup(rl.Rectangle{100, 100, 120, 30}, TOOLS, (^i32)(&canvas.tool_selected))
 }
 
 canvas_gui_play_stop :: proc() {
