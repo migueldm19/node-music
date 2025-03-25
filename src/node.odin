@@ -4,10 +4,11 @@ import rl "vendor:raylib"
 import "core:log"
 import "core:sync"
 
-current_node_id: u16 = 0
+NodeID :: distinct u16
+current_node_id: NodeID = 0
 
 Node :: struct {
-    id: u16,
+    id: NodeID,
     point: Point,
 
     next_paths: [dynamic]^Path,
@@ -23,7 +24,7 @@ Node :: struct {
 }
 
 NodeData :: struct {
-    id: u16,
+    id: NodeID,
     point: Point,
     next_paths: [dynamic]PathData,
     begining: bool,
@@ -51,7 +52,14 @@ node_data_delete :: proc(node_data: NodeData) {
     delete(node_data.next_paths)
 }
 
-node_new_with_id :: proc(id: u16, point: Point) -> ^Node {
+node_new_from_data :: proc(node_data: NodeData) -> ^Node {
+    node := node_new_with_id(node_data.id, node_data.point)
+    node.begining = node_data.begining
+    node.current_note = node_data.note
+    return node
+}
+
+node_new_with_id :: proc(id: NodeID, point: Point) -> ^Node {
     node := new(Node)
 
     node.id = id

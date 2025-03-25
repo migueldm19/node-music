@@ -26,24 +26,44 @@ canvas_gui_draw_and_update :: proc() {
 
 canvas_gui_menu_bar :: proc() {
     openSavePopup: bool
+    openLoadPopup: bool
 
     if imgui.BeginMainMenuBar() {
         if imgui.BeginMenu("File") {
-            openSavePopup = imgui.MenuItem("Save", "Ctrl+S")
+            openSavePopup = imgui.MenuItem("Save", "Ctrl+S") // TODO: shortcuts
+            openLoadPopup = imgui.MenuItem("Open", "Ctrl+O")
             imgui.EndMenu()
         }
 
-        if openSavePopup do imgui.OpenPopup("Path")
+        if openSavePopup do imgui.OpenPopup("Save path")
+        if openLoadPopup do imgui.OpenPopup("Load path")
+
         canvas_gui_save_menu()
+        canvas_gui_load_menu()
 
         imgui.EndMainMenuBar()
     }
 }
 
+//TODO: See how to input text for path (or open file manager)
 canvas_gui_save_menu :: proc() {
-    if imgui.BeginPopupModal("Path", nil, {.AlwaysAutoResize}) {
+    if imgui.BeginPopupModal("Save path", nil, {.AlwaysAutoResize}) {
         if imgui.Button("Save") {
             canvas_serialize("canvas.json")
+            imgui.CloseCurrentPopup()
+        }
+        if imgui.Button("Close") {
+            imgui.CloseCurrentPopup()
+        }
+        imgui.EndPopup()
+    }
+}
+
+canvas_gui_load_menu :: proc() {
+    if imgui.BeginPopupModal("Load path", nil, {.AlwaysAutoResize}) {
+        if imgui.Button("Load") {
+            canvas_load_file("canvas.json")
+            imgui.CloseCurrentPopup()
         }
         if imgui.Button("Close") {
             imgui.CloseCurrentPopup()

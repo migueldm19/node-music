@@ -23,8 +23,8 @@ Path :: struct {
 }
 
 PathData :: struct {
-    start: u16,
-    end: u16,
+    start: NodeID,
+    end: NodeID,
 }
 
 path_data :: proc(path: ^Path) -> PathData {

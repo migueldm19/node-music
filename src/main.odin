@@ -48,6 +48,9 @@ main :: proc() {
     canvas_init()
     defer canvas_deinit()
 
+    canvas_gui_init()
+    defer canvas_gui_deinit()
+
     for !rl.WindowShouldClose() {
         rl.BeginDrawing()
         canvas_draw()

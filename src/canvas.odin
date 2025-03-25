@@ -82,7 +82,6 @@ canvas_init :: proc() {
     canvas.node_stop_queue = make([dynamic]^Node)
 
     canvas.active_paths = make([dynamic]^Path, 0, 30)
-    canvas_gui_init()
 }
 
 canvas_deinit :: proc() {
@@ -97,8 +96,49 @@ canvas_deinit :: proc() {
     delete(canvas.node_delete_queue)
     delete(canvas.node_stop_queue)
     delete(canvas.active_paths)
-    canvas_gui_deinit()
     free(canvas)
+    canvas = nil
+}
+
+canvas_load_from_data :: proc(canvas_data: CanvasData) {
+    nodes_by_id := make(map[NodeID]^Node)
+    defer delete(nodes_by_id)
+
+    for node_data in canvas_data.nodes {
+        nodes_by_id[node_data.id] = canvas_add_node(node_data)
+    }
+
+    for node_data in canvas_data.nodes {
+        for path_data in node_data.next_paths {
+            start_node := nodes_by_id[path_data.start]
+            new_path := path_new(start_node, nodes_by_id[path_data.end])
+            node_add_path(start_node, new_path)
+        }
+    }
+}
+
+canvas_load_file :: proc(path: string) {
+    data, ok := os.read_entire_file(path)
+    defer delete(data)
+
+    if !ok {
+        log.warnf("Error reading file %v", path)
+        return
+    }
+
+    log.debugf("Unmarshaling canvas data")
+    canvas_data: CanvasData
+    err : json.Unmarshal_Error= json.unmarshal(data, &canvas_data)
+    defer canvas_data_delete(canvas_data)
+
+    if err != nil {
+        log.warnf("Error unmarshalling data: %v", err)
+        return
+    }
+
+    canvas_deinit()
+    canvas_init()
+    canvas_load_from_data(canvas_data)
 }
 
 canvas_serialize :: proc(path: string) {
@@ -358,6 +398,12 @@ canvas_create_new_node :: proc(position: rl.Vector2) {
     }
 }
 
+canvas_add_node :: proc(node_data: NodeData) -> ^Node {
+    new_node := node_new_from_data(node_data)
+    canvas.nodes[new_node.point] = new_node
+    return new_node
+}
+
 canvas_update_camera :: proc() {
     canvas.camera.zoom += (f32(rl.GetMouseWheelMove()) * ZOOM_SPEED)
 
@@ -402,6 +448,8 @@ canvas_add_active_path :: proc(path: ^Path) {
 }
 
 canvas_metronome_ping :: proc() {
+    if canvas == nil do return
+
     canvas_stop_playing_nodes()
     active_paths_slice := canvas.active_paths[:]
     clear(&canvas.active_paths)
