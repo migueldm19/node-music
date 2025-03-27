@@ -118,17 +118,20 @@ canvas_gui_node :: proc() {
                 imgui.Checkbox("Begining", &node.begining)
             }
             if imgui.CollapsingHeader("Note selection", {.DefaultOpen}) {
-                selected_note: c.int = i32(node.current_note)
-                imgui.ComboChar(
-                    possible_notes_for_node[node.current_note],
-                    &selected_note,
-                    raw_data(possible_notes_for_node[:]),
-                    128
-                )
+                imgui.Checkbox("Random notes", &node.random_note)
+                if !node.random_note {
+                    selected_note: c.int = i32(node.current_note)
+                    imgui.ComboChar(
+                        possible_notes_for_node[node.current_note],
+                        &selected_note,
+                        raw_data(possible_notes_for_node[:]),
+                        128
+                    )
 
-                if imgui.IsItemEdited() {
-                    log.debugf("selected %v", selected_note)
-                    node_change_note(node, Note(selected_note))
+                    if imgui.IsItemEdited() {
+                        log.debugf("selected %v", selected_note)
+                        node_change_note(node, Note(selected_note))
+                    }
                 }
             }
         }

@@ -2,6 +2,7 @@ package main
 
 import rl "vendor:raylib"
 import "core:fmt"
+import "core:math/rand"
 import "core:log"
 import "core:sync"
 
@@ -22,6 +23,7 @@ Node :: struct {
     playing_mutex: sync.Mutex,
 
     current_note: Note,
+    random_note: bool,
 }
 
 NodeData :: struct {
@@ -158,6 +160,9 @@ node_add_path :: proc(node: ^Node, path: ^Path) {
 
 node_play :: proc(node: ^Node) {
     sync.mutex_lock(&node.playing_mutex)
+    if node.random_note {
+        node.current_note = Note(rand.uint32() & 0x7F)
+    }
     midi_play_note(node.current_note)
     node.playing = true
 
