@@ -29,7 +29,6 @@ Canvas :: struct {
     tool_selected: Tool,
 
     selected_node_for_path: ^Node,
-    selected_node: ^Node,
 
     playing: bool,
 }
@@ -227,10 +226,6 @@ canvas_draw_nodes :: proc() {
     for _, node in canvas.nodes {
         node_draw(node)
     }
-
-    if canvas.selected_node != nil {
-        node_draw_being_edited(canvas.selected_node)
-    }
 }
 
 canvas_draw_grid :: proc() {
@@ -317,7 +312,11 @@ canvas_update :: proc() {
     canvas_update_camera()
     canvas_update_possible_node_position()
 
-    canvas_handle_input()
+    imgui_io := imgui.GetIO()
+
+    if !imgui_io.WantCaptureMouse && !imgui_io.WantCaptureKeyboard {
+        canvas_handle_input()
+    }
 
     for _, node in canvas.nodes {
         node_update(node)
@@ -367,10 +366,6 @@ canvas_delete_all_selected_nodes :: proc() {
             node.deleted = true
             delete_key(&canvas.nodes, point)
             append(&canvas.node_delete_queue, node)
-
-            if node == canvas.selected_node {
-                canvas.selected_node = nil
-            }
         }
     }
 }

@@ -1,6 +1,7 @@
 package main
 
 import rl "vendor:raylib"
+import "core:fmt"
 import "core:log"
 import "core:sync"
 
@@ -146,22 +147,19 @@ node_draw :: proc(node: ^Node) {
             2.0,
             rl.BLUE
         )
+
+        rl.DrawText(
+            fmt.ctprint(node.id),
+            i32(position.x) + NODE_RADIUS + 10,
+            i32(position.y) - NODE_RADIUS - 3,
+            3,
+            rl.BLACK
+        )
     }
 
     for path in node.next_paths {
         path_draw(path)
     }
-}
-
-node_draw_being_edited :: proc(node: ^Node) {
-    position := point_get_position(node.point)
-
-    rl.DrawCircle(
-        i32(position.x),
-        i32(position.y),
-        NODE_RADIUS,
-        rl.ColorAlpha(NODE_BEING_EDITED_COLOR, 0.3)
-    )
 }
 
 node_add_path :: proc(node: ^Node, path: ^Path) {

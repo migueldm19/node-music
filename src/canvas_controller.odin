@@ -36,10 +36,6 @@ canvas_handle_mouse_tool_input :: proc() {
         if !ok do return
 
         possible_node.selected = true
-
-        if monoselection {
-            canvas.selected_node = possible_node if canvas.selected_node != possible_node else nil
-        }
     }
 
     if rl.IsKeyPressed(.DELETE) {

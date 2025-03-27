@@ -9,6 +9,7 @@ import "core:log"
 import "core:unicode/utf8"
 import "core:fmt"
 import "core:strings"
+import "core:strconv"
 import "core:c"
 
 PLAY_BUTTON :: "#131#"
@@ -102,8 +103,10 @@ canvas_gui_play_stop :: proc() {
 }
 
 canvas_gui_node :: proc() {
-    if node := canvas.selected_node; node != nil {
-        if imgui.Begin("Node") {
+    for _, node in canvas.nodes {
+        if !node.selected do continue
+
+        if imgui.Begin(fmt.ctprintf("Node %v", node.id)) {
             if imgui.Button("Increase note") do node_inc_note(node)
             imgui.Text(note_to_string(node.current_note))
             if imgui.Button("Decrease note") do node_dec_note(node)
