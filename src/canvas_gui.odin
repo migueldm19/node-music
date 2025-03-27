@@ -113,10 +113,14 @@ canvas_gui_node :: proc() {
         if !node.selected do continue
 
         if imgui.Begin(fmt.ctprintf("Node %v", node.id)) {
-            if imgui.Button("Increase note") do node_inc_note(node)
-            imgui.Text(note_to_string(node.current_note))
-            if imgui.Button("Decrease note") do node_dec_note(node)
-            imgui.Checkbox("Begining", &node.begining)
+            if imgui.CollapsingHeader("Properties", {.DefaultOpen}) {
+                imgui.Checkbox("Begining", &node.begining)
+            }
+            if imgui.CollapsingHeader("Note selection", {.DefaultOpen}) {
+                if imgui.Button("Increase note") do node_inc_note(node)
+                imgui.Text(note_to_string(node.current_note))
+                if imgui.Button("Decrease note") do node_dec_note(node)
+            }
         }
         imgui.End()
     }
