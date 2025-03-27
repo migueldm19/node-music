@@ -52,6 +52,7 @@ canvas_gui_save_menu :: proc() {
             canvas_serialize("canvas.json")
             imgui.CloseCurrentPopup()
         }
+        imgui.SameLine()
         if imgui.Button("Close") {
             imgui.CloseCurrentPopup()
         }
@@ -65,6 +66,7 @@ canvas_gui_load_menu :: proc() {
             canvas_load_file("canvas.json")
             imgui.CloseCurrentPopup()
         }
+        imgui.SameLine()
         if imgui.Button("Close") {
             imgui.CloseCurrentPopup()
         }
