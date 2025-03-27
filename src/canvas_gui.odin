@@ -15,10 +15,10 @@ PLAY_BUTTON :: "#131#"
 STOP_BUTTON :: "#133#"
 
 canvas_gui_draw_and_update :: proc() {
-    canvas_gui_tool_selection()
     canvas_gui_play_stop()
 
     canvas_gui_begin()
+        canvas_gui_tool_selection()
         canvas_gui_menu_bar()
         canvas_gui_node()
     canvas_gui_end()
@@ -75,7 +75,18 @@ canvas_gui_load_menu :: proc() {
 }
 
 canvas_gui_tool_selection :: proc() {
-    rl.GuiToggleGroup(rl.Rectangle{100, 100, 120, 30}, TOOLS, (^i32)(&canvas.tool_selected))
+    if imgui.Begin("Tools") {
+        if imgui.RadioButton("Mouse", canvas.tool_selected == .MouseTool) {
+            canvas_change_tool(.MouseTool)
+        }
+        if imgui.RadioButton("Node", canvas.tool_selected == .NodeTool) {
+            canvas_change_tool(.NodeTool)
+        }
+        if imgui.RadioButton("Path", canvas.tool_selected == .PathTool) {
+            canvas_change_tool(.PathTool)
+        }
+    }
+    imgui.End()
 }
 
 canvas_gui_play_stop :: proc() {

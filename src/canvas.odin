@@ -9,12 +9,6 @@ import "core:encoding/json"
 import "core:io"
 import "core:os"
 
-Tool :: enum i32 {
-    MOUSE_TOOL,
-    NODE_TOOL,
-    PATH_TOOL,
-}
-
 Canvas :: struct {
     camera: rl.Camera2D,
 
@@ -219,11 +213,11 @@ canvas_start_playing :: proc() {
 
 canvas_draw_possible_elements :: proc() {
     switch canvas.tool_selected {
-    case .MOUSE_TOOL:
+    case .MouseTool:
         canvas_draw_possible_selection()
-    case .NODE_TOOL:
+    case .NodeTool:
         canvas_draw_possible_node()
-    case .PATH_TOOL:
+    case .PathTool:
         canvas_draw_possible_path()
         canvas_draw_possible_selection()
     }

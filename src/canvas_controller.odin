@@ -2,15 +2,25 @@ package main
 
 import rl "vendor:raylib"
 
+Tool :: enum {
+    MouseTool,
+    NodeTool,
+    PathTool,
+}
+
 canvas_handle_input :: proc() {
     switch canvas.tool_selected {
-    case .NODE_TOOL:
+    case .NodeTool:
         canvas_handle_node_tool_input()
-    case .PATH_TOOL:
+    case .PathTool:
         canvas_handle_path_tool_input()
-    case .MOUSE_TOOL:
+    case .MouseTool:
         canvas_handle_mouse_tool_input()
     }
+}
+
+canvas_change_tool :: proc(tool: Tool) {
+    canvas.tool_selected = tool
 }
 
 canvas_handle_mouse_tool_input :: proc() {
