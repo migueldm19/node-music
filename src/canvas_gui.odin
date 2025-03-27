@@ -87,8 +87,12 @@ canvas_gui_tool_selection :: proc() {
     if imgui.RadioButton("Node", canvas.tool_selected == .NodeTool) {
         canvas_change_tool(.NodeTool)
     }
-    if imgui.RadioButton("Path", canvas.tool_selected == .PathTool) {
-        canvas_change_tool(.PathTool)
+    if imgui.RadioButton("Path", canvas.tool_selected == .NormalPathTool) {
+        canvas_change_tool(.NormalPathTool)
+    }
+    imgui.SameLine()
+    if imgui.RadioButton("Transfer", canvas.tool_selected == .TransferPathTool) {
+        canvas_change_tool(.TransferPathTool)
     }
 }
 

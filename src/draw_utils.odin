@@ -47,7 +47,20 @@ get_direction :: proc(start_position, end_position: rl.Vector2) -> Direction {
     return dir
 }
 
-draw_path :: proc(start, end: rl.Vector2, active: bool = false) {
+draw_path :: proc(start, end: rl.Vector2, type: PathType, active: bool = false) {
+    switch type {
+    case .Normal: draw_normal_path(start, end, active)
+    case .Transfer: draw_transfer_path(start, end)
+    }
+}
+
+draw_transfer_path :: proc(start, end: rl.Vector2) {
+    rl.DrawLineEx(start, end, PATH_THICKNESS, TRANSFER_PATH_COLOR)
+    rl.DrawCircleLinesV(start, 8, TRANSFER_PATH_COLOR)
+    rl.DrawCircleLinesV(end, 5, TRANSFER_PATH_COLOR)
+}
+
+draw_normal_path :: proc(start, end: rl.Vector2, active: bool = false) {
     start_position := start
     end_position := end
 

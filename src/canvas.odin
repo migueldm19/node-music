@@ -104,7 +104,7 @@ canvas_load_from_data :: proc(canvas_data: CanvasData) {
     for node_data in canvas_data.nodes {
         for path_data in node_data.next_paths {
             start_node := nodes_by_id[path_data.start]
-            new_path := path_new(start_node, nodes_by_id[path_data.end])
+            new_path := path_new(start_node, nodes_by_id[path_data.end], path_data.type)
             node_add_path(start_node, new_path)
         }
     }
@@ -216,7 +216,7 @@ canvas_draw_possible_elements :: proc() {
         canvas_draw_possible_selection()
     case .NodeTool:
         canvas_draw_possible_node()
-    case .PathTool:
+    case .NormalPathTool, .TransferPathTool:
         canvas_draw_possible_path()
         canvas_draw_possible_selection()
     }
@@ -303,8 +303,8 @@ canvas_draw_possible_path :: proc() {
     if canvas.selected_node_for_path != nil {
     start_position := point_get_position(canvas.selected_node_for_path.point)
         end_position := canvas_get_relative_mouse_position()
-
-        draw_path(start_position, end_position)
+        type: PathType = .Normal if canvas.tool_selected == .NormalPathTool else .Transfer
+        draw_path(start_position, end_position, type)
     }
 }
 

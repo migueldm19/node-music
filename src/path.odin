@@ -12,10 +12,16 @@ Direction :: enum {
     RIGHT,
 }
 
+PathType :: enum {
+    Normal,
+    Transfer,
+}
+
 Path :: struct {
     start: ^Node `json:"start"`,
     end: ^Node `json:"end"`,
     distance: i16,
+    type: PathType,
 
     active: bool,
 
@@ -25,6 +31,7 @@ Path :: struct {
 PathData :: struct {
     start: NodeID,
     end: NodeID,
+    type: PathType,
 }
 
 path_data :: proc(path: ^Path) -> PathData {
@@ -32,14 +39,16 @@ path_data :: proc(path: ^Path) -> PathData {
     return PathData {
         start = path.start.id,
         end = path.end.id,
+        type = path.type,
     }
 }
 
-path_new :: proc(start, end: ^Node) -> ^Path {
+path_new :: proc(start, end: ^Node, type: PathType) -> ^Path {
     path := new(Path)
 
     path.start = start
     path.end = end
+    path.type = type
 
     path.active = false
     path.ping_count = 0
@@ -68,6 +77,7 @@ path_draw :: proc(path: ^Path) {
     draw_path(
         start_position,
         end_position,
+        path.type,
         path.active,
     )
 }
@@ -90,7 +100,14 @@ path_deactivate :: proc(path: ^Path) {
 }
 
 path_activate :: proc(path: ^Path) {
-    path.ping_count = 0
-    path.active = true
-    canvas_add_active_path(path)
+    switch path.type {
+    case .Normal: {
+        path.ping_count = 0
+        path.active = true
+        canvas_add_active_path(path)
+    }
+    case .Transfer: {
+        node_play(path.end)
+    }
+    }
 }

@@ -5,14 +5,15 @@ import rl "vendor:raylib"
 Tool :: enum {
     MouseTool,
     NodeTool,
-    PathTool,
+    NormalPathTool,
+    TransferPathTool,
 }
 
 canvas_handle_input :: proc() {
     switch canvas.tool_selected {
     case .NodeTool:
         canvas_handle_node_tool_input()
-    case .PathTool:
+    case .NormalPathTool, .TransferPathTool:
         canvas_handle_path_tool_input()
     case .MouseTool:
         canvas_handle_mouse_tool_input()
@@ -75,7 +76,14 @@ canvas_handle_path_tool_input :: proc() {
             canvas.selected_node_for_path = possible_node
         } else {
             if canvas.selected_node_for_path == possible_node do return
-            path := path_new(canvas.selected_node_for_path, possible_node)
+
+            path_type: PathType
+            #partial switch canvas.tool_selected {
+            case .NormalPathTool: path_type = .Normal
+            case .TransferPathTool: path_type = .Transfer
+            }
+
+            path := path_new(canvas.selected_node_for_path, possible_node, path_type)
             node_add_path(canvas.selected_node_for_path, path)
             canvas.selected_node_for_path = nil
         }
