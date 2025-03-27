@@ -12,14 +12,9 @@ import "core:strings"
 import "core:strconv"
 import "core:c"
 
-PLAY_BUTTON :: "#131#"
-STOP_BUTTON :: "#133#"
-
 canvas_gui_draw_and_update :: proc() {
-    canvas_gui_play_stop()
-
     canvas_gui_begin()
-        canvas_gui_tool_selection()
+        canvas_gui_main_menu()
         canvas_gui_menu_bar()
         canvas_gui_node()
     canvas_gui_end()
@@ -75,28 +70,35 @@ canvas_gui_load_menu :: proc() {
     }
 }
 
-canvas_gui_tool_selection :: proc() {
-    if imgui.Begin("Tools") {
-        if imgui.RadioButton("Mouse", canvas.tool_selected == .MouseTool) {
-            canvas_change_tool(.MouseTool)
-        }
-        if imgui.RadioButton("Node", canvas.tool_selected == .NodeTool) {
-            canvas_change_tool(.NodeTool)
-        }
-        if imgui.RadioButton("Path", canvas.tool_selected == .PathTool) {
-            canvas_change_tool(.PathTool)
-        }
+canvas_gui_main_menu:: proc() {
+    //TODO: Change with logos?
+    if imgui.Begin("Main menu") {
+        canvas_gui_play_stop()
+        canvas_gui_tool_selection()
     }
     imgui.End()
 }
 
+canvas_gui_tool_selection :: proc() {
+    imgui.Text("Tools")
+    if imgui.RadioButton("Mouse", canvas.tool_selected == .MouseTool) {
+        canvas_change_tool(.MouseTool)
+    }
+    if imgui.RadioButton("Node", canvas.tool_selected == .NodeTool) {
+        canvas_change_tool(.NodeTool)
+    }
+    if imgui.RadioButton("Path", canvas.tool_selected == .PathTool) {
+        canvas_change_tool(.PathTool)
+    }
+}
+
 canvas_gui_play_stop :: proc() {
-	if canvas.playing {
-        if rl.GuiButton(rl.Rectangle{800, 30, 30, 30}, STOP_BUTTON) {
+    if canvas.playing {
+        if imgui.Button("Stop") {
             canvas_stop_playing()
         }
     } else {
-        if rl.GuiButton(rl.Rectangle{800, 30, 30, 30}, PLAY_BUTTON) {
+        if imgui.Button("Play") {
             canvas_start_playing()
         }
     }
