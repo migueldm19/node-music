@@ -71,7 +71,7 @@ node_new_with_id :: proc(id: NodeID, point: Point) -> ^Node {
 
     node.point = point
 
-    node.current_note = .LA
+    node.current_note = 60
 
     node.next_paths = make([dynamic]^Path)
 
@@ -98,21 +98,11 @@ node_change_note :: proc(node: ^Node, note: Note) {
 }
 
 node_inc_note :: proc(node: ^Node) {
-    node.current_note += Note(1)
-    if node.current_note == .NOTES_END {
-        node.current_note = .NOTES_BEGINING + Note(1)
-    }
-
-    node_change_note(node, node.current_note)
+    node.current_note = (node.current_note + 1) & 0x7F
 }
 
 node_dec_note :: proc(node: ^Node) {
-    node.current_note -= Note(1)
-    if node.current_note == .NOTES_BEGINING {
-        node.current_note = .NOTES_END - Note(1)
-    }
-
-    node_change_note(node, node.current_note)
+    node.current_note = (node.current_note - 1) & 0x7F
 }
 
 node_draw :: proc(node: ^Node) {

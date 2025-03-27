@@ -108,6 +108,7 @@ canvas_gui_play_stop :: proc() {
     }
 }
 
+possible_notes_for_node: [128]cstring
 canvas_gui_node :: proc() {
     for _, node in canvas.nodes {
         if !node.selected do continue
@@ -117,9 +118,18 @@ canvas_gui_node :: proc() {
                 imgui.Checkbox("Begining", &node.begining)
             }
             if imgui.CollapsingHeader("Note selection", {.DefaultOpen}) {
-                if imgui.Button("Increase note") do node_inc_note(node)
-                imgui.Text(note_to_string(node.current_note))
-                if imgui.Button("Decrease note") do node_dec_note(node)
+                selected_note: c.int = i32(node.current_note)
+                imgui.ComboChar(
+                    possible_notes_for_node[node.current_note],
+                    &selected_note,
+                    raw_data(possible_notes_for_node[:]),
+                    128
+                )
+
+                if imgui.IsItemEdited() {
+                    log.debugf("selected %v", selected_note)
+                    node_change_note(node, Note(selected_note))
+                }
             }
         }
         imgui.End()
@@ -132,6 +142,11 @@ canvas_gui_init :: proc() {
     window := rl.GetWindowHandle()
     imgui_impl_glfw.InitForOpenGL(cast(glfw.WindowHandle) window, true)
     imgui_impl_opengl3.Init("#version 150")
+
+    notes_str : [128]string
+    for i in 0..<128 {
+        possible_notes_for_node[i] = note_to_string(Note(i))
+    }
 }
 
 canvas_gui_deinit :: proc() {

@@ -3,62 +3,17 @@ package main
 import "core:math"
 import "core:time"
 import "core:log"
+import "core:fmt"
 import rl "vendor:raylib"
 import pm "vendor:portmidi"
 
-Note :: enum {
-	NOTES_BEGINING,
-	DO,
-	DOS,
-	RE,
-	RES,
-	MI,
-	FA,
-	FAS,
-	SOL,
-	SOLS,
-	LA,
-	LAS,
-	SI,
-	NOTES_END,
-}
+Note :: distinct u8
 
-NOTES := [Note]i32 {
-    .NOTES_BEGINING = -1,
-    .DO = 60,
-    .DOS = 61,
-    .RE = 62,
-    .RES = 63,
-    .MI = 64,
-    .FA = 65,
-    .FAS = 66,
-    .SOL = 67,
-    .SOLS = 68,
-    .LA = 69,
-    .LAS = 70,
-    .SI = 71,
-    .NOTES_END = -1,
-}
-
-NOTE_STRINGS := [Note]cstring {
-	.NOTES_BEGINING = "None",
-	.DO = "Do",
-	.DOS = "Do#/Reb",
-	.RE = "Re",
-	.RES = "Re#/Mib",
-	.MI = "Mi",
-	.FA = "Fa",
-	.FAS = "Fa#/Solb",
-	.SOL = "Sol",
-	.SOLS = "Sol#/Lab",
-	.LA = "La",
-	.LAS = "La#/Sib",
-	.SI = "Si",
-	.NOTES_END = "None",
-}
+NOTE_STRINGS: []cstring = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"}
 
 note_to_string :: proc(note: Note) -> cstring {
-	return NOTE_STRINGS[note]
+    note_idx:i8 = i8(note) / 10 - 1
+	return fmt.ctprintf("%v%v", NOTE_STRINGS[note % 12], note_idx)
 }
 
 midi_time_proc :: proc "c" (time_info: rawptr = nil) -> pm.Timestamp {
@@ -81,21 +36,24 @@ midi_init :: proc() {
     if err != .NoError {
         log.errorf("Error opening default PortMidi output: %v", err)
     }
+
+    notes_playing = make([dynamic]Note)
 }
 
 midi_deinit :: proc() {
     log.debug("Deinitializing midi output stream")
     pm.Close(midi_output_stream)
     pm.Terminate()
+    delete(notes_playing)
 }
 
-notes_playing: bit_set[Note]
+notes_playing: [dynamic]Note
 
 midi_play_note :: proc(note: Note) {
     note_on: pm.Event
     note_on.timestamp = midi_time_proc()
-    note_on.message = pm.MessageCompose(0x90, NOTES[note], 127)
-    notes_playing += {note}
+    note_on.message = pm.MessageCompose(0x90, i32(note), 127)
+    append(&notes_playing, note)
 
     pm.Write(midi_output_stream, &note_on, 1)
 }
@@ -103,8 +61,7 @@ midi_play_note :: proc(note: Note) {
 midi_stop_note :: proc(note: Note) {
     note_off: pm.Event
     note_off.timestamp = midi_time_proc()
-    note_off.message = pm.MessageCompose(0x80, NOTES[note], 0)
-    notes_playing -= {note}
+    note_off.message = pm.MessageCompose(0x80, i32(note), 0)
 
     pm.Write(midi_output_stream, &note_off, 1)
 }
@@ -113,5 +70,5 @@ midi_stop_all_notes :: proc() {
     for note in notes_playing {
         midi_stop_note(note)
     }
-    notes_playing = {}
+    clear(&notes_playing)
 }
