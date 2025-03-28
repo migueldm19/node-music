@@ -104,7 +104,7 @@ canvas_load_from_data :: proc(canvas_data: CanvasData) {
     for node_data in canvas_data.nodes {
         for path_data in node_data.next_paths {
             start_node := nodes_by_id[path_data.start]
-            new_path := path_new(start_node, nodes_by_id[path_data.end], path_data.type)
+            new_path := path_new(start_node, nodes_by_id[path_data.end], path_data.type, path_data.probability)
             node_add_path(start_node, new_path)
         }
     }

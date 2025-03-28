@@ -35,6 +35,7 @@ PathData :: struct {
     start: NodeID,
     end: NodeID,
     type: PathType,
+    probability: f32,
 }
 
 path_data :: proc(path: ^Path) -> PathData {
@@ -43,16 +44,17 @@ path_data :: proc(path: ^Path) -> PathData {
         start = path.start.id,
         end = path.end.id,
         type = path.type,
+        probability = path.probability,
     }
 }
 
-path_new :: proc(start, end: ^Node, type: PathType) -> ^Path {
+path_new :: proc(start, end: ^Node, type: PathType, probability: f32 = 1.0) -> ^Path {
     path := new(Path)
 
     path.start = start
     path.end = end
     path.type = type
-    path.probability = 1.0
+    path.probability = probability
     path.active = false
     path.ping_count = 0
 
