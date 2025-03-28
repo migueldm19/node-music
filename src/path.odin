@@ -2,6 +2,7 @@ package main
 
 import rl "vendor:raylib"
 import "core:math"
+import "core:math/rand"
 import "core:log"
 import "core:time"
 
@@ -18,14 +19,16 @@ PathType :: enum {
 }
 
 Path :: struct {
-    start: ^Node `json:"start"`,
-    end: ^Node `json:"end"`,
+    start: ^Node,
+    end: ^Node,
+
     distance: i16,
+    probability: f32,
     type: PathType,
 
     active: bool,
 
-    ping_count: i16
+    ping_count: i16,
 }
 
 PathData :: struct {
@@ -49,7 +52,7 @@ path_new :: proc(start, end: ^Node, type: PathType) -> ^Path {
     path.start = start
     path.end = end
     path.type = type
-
+    path.probability = 1.0
     path.active = false
     path.ping_count = 0
 
@@ -100,6 +103,9 @@ path_deactivate :: proc(path: ^Path) {
 }
 
 path_activate :: proc(path: ^Path) {
+    if path.probability < 1.0 {
+        if rand.float32() > path.probability do return
+    }
     switch path.type {
     case .Normal: {
         path.ping_count = 0

@@ -114,28 +114,50 @@ canvas_gui_node :: proc() {
         if !node.selected do continue
 
         if imgui.Begin(fmt.ctprintf("Node %v", node.id)) {
-            if imgui.CollapsingHeader("Properties", {.DefaultOpen}) {
-                imgui.Checkbox("Begining", &node.begining)
-            }
-            if imgui.CollapsingHeader("Note selection", {.DefaultOpen}) {
-                imgui.Checkbox("Random notes", &node.random_note)
-                if !node.random_note {
-                    selected_note: c.int = i32(node.current_note)
-                    imgui.ComboChar(
-                        possible_notes_for_node[node.current_note],
-                        &selected_note,
-                        raw_data(possible_notes_for_node[:]),
-                        128
-                    )
-
-                    if imgui.IsItemEdited() {
-                        log.debugf("selected %v", selected_note)
-                        node_change_note(node, Note(selected_note))
-                    }
-                }
-            }
+            canvas_gui_node_properties(node)
+            canvas_gui_note_selection(node)
+            canvas_gui_egress_paths(node)
         }
         imgui.End()
+    }
+}
+
+canvas_gui_node_properties :: proc(node: ^Node) {
+    if imgui.CollapsingHeader("Properties", {.DefaultOpen}) {
+        imgui.Checkbox("Begining", &node.begining)
+    }
+}
+
+canvas_gui_note_selection :: proc(node: ^Node) {
+    if imgui.CollapsingHeader("Note selection", {.DefaultOpen}) {
+        imgui.Checkbox("Random notes", &node.random_note)
+        if !node.random_note {
+            selected_note: c.int = i32(node.current_note)
+            imgui.ComboChar(
+                possible_notes_for_node[node.current_note],
+                &selected_note,
+                raw_data(possible_notes_for_node[:]),
+                128
+            )
+
+            if imgui.IsItemEdited() {
+                log.debugf("selected %v", selected_note)
+                node_change_note(node, Note(selected_note))
+            }
+        }
+    }
+}
+
+canvas_gui_egress_paths :: proc(node: ^Node) {
+    if len(node.next_paths) == 0 do return
+    if imgui.CollapsingHeader("Egress paths", {.DefaultOpen}) {
+        for path in node.next_paths {
+            if imgui.CollapsingHeader(fmt.ctprint("Path to node", path.end.id)) {
+                imgui.InputFloat("Probability", &path.probability, 0.05, 0.0, "%.2f")
+                if path.probability > 1.0 do path.probability = 1.0
+                if path.probability < 0.0 do path.probability = 0.0
+            }
+        }
     }
 }
 
