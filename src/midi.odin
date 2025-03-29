@@ -65,7 +65,7 @@ command_codes: [MidiCommand]i32 = {
 }
 
 midi_stop_all_notes :: proc() {
-    log.debug("stopping all midi notes")
+    log.debug("Stopping all midi notes")
     for note in 0..<0x8F {
         for channel in 0..<10 {
             midi_note_command(.Stop, Note(note), u8(channel), 0)
@@ -73,13 +73,17 @@ midi_stop_all_notes :: proc() {
     }
 }
 
-midi_note_command :: proc(command: MidiCommand, note: Note, channel: u8, velocity: u8) {
+midi_check_errors :: proc() {
     if pm.HasHostError(midi_output_stream) {
         buff: [256]byte
         log.debug("Midi host error", pm.GetHostErrorText(buff[:]))
         midi_reconnect()
     }
-    assert(channel <= 0xF, "Channel should be 16 or less")
+}
+
+midi_note_command :: proc(command: MidiCommand, note: Note, channel: u8, velocity: u8) {
+    assert(channel <= 0xF, "Channel should be 15 or less")
+    assert(note <= 0x7F, "note should be 127 or less")
     note_command: pm.Event
     note_command.timestamp = midi_time_proc()
     note_command.message = pm.MessageCompose(
