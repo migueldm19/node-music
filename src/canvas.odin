@@ -233,13 +233,17 @@ canvas_draw_nodes :: proc() {
 canvas_draw_grid :: proc() {
     camera_position: rl.Vector2 = canvas.camera.target - canvas.camera.offset
     step_size := f32(NODE_SEPARATION * canvas.subdivision)
-    zoom_offset := ZOOM_OFFSET_GRID / canvas.camera.zoom
 
-    offset_x := math.mod_f32(camera_position.x, f32(step_size))
-    offset_y := math.mod_f32(camera_position.y, f32(step_size))
+    zoom_offset: f32
+    if canvas.camera.zoom < 1 {
+        zoom_offset = ZOOM_OFFSET_GRID / canvas.camera.zoom
+    }
+
+    offset_x := math.mod_f32(camera_position.x - zoom_offset, f32(step_size))
+    offset_y := math.mod_f32(camera_position.y - zoom_offset, f32(step_size))
 
     // Vertical lines
-    for i := camera_position.x - offset_x;
+    for i := camera_position.x - offset_x - zoom_offset;
     i < f32(canvas.window_width) + camera_position.x + zoom_offset;
     i += step_size {
         rl.DrawLineV(
@@ -250,7 +254,7 @@ canvas_draw_grid :: proc() {
     }
 
     // Horizontal lines
-    for i := camera_position.y - offset_y;
+    for i := camera_position.y - offset_y - zoom_offset;
     i < f32(canvas.window_height) + camera_position.y + zoom_offset;
     i += step_size {
         rl.DrawLineV(
@@ -260,19 +264,19 @@ canvas_draw_grid :: proc() {
         )
     }
 
-    offset_x = math.mod_f32(camera_position.x, f32(NODE_SEPARATION))
-    offset_y = math.mod_f32(camera_position.y, f32(NODE_SEPARATION))
+    offset_x = math.mod_f32(camera_position.x - zoom_offset, f32(NODE_SEPARATION))
+    offset_y = math.mod_f32(camera_position.y - zoom_offset, f32(NODE_SEPARATION))
 
     // Points
-    for i:= camera_position.x - offset_x;
+    for i:= camera_position.x - offset_x - zoom_offset;
     i < f32(canvas.window_width) + camera_position.x + zoom_offset;
     i += NODE_SEPARATION {
-        for j:= camera_position.y - offset_y;
+        for j:= camera_position.y - offset_y - zoom_offset;
         j < f32(canvas.window_height) + camera_position.y + zoom_offset;
         j += NODE_SEPARATION {
             rl.DrawCircleV({i, j}, POINTS_SIZE, POINTS_COLOR)
         }
-        for j:= camera_position.y - offset_y;
+        for j:= camera_position.y - offset_y - zoom_offset;
         j > -zoom_offset - camera_position.x;
         j -= NODE_SEPARATION {
             rl.DrawCircleV({i, j}, POINTS_SIZE, POINTS_COLOR)
