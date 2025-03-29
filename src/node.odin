@@ -23,6 +23,7 @@ Node :: struct {
     playing_mutex: sync.Mutex,
 
     current_note: Note,
+    channel: u8,
     random_note: bool,
 }
 
@@ -32,6 +33,7 @@ NodeData :: struct {
     next_paths: [dynamic]PathData,
     begining: bool,
     note: Note,
+    channel: u8,
 }
 
 node_get_data :: proc(node: ^Node) -> NodeData {
@@ -48,6 +50,7 @@ node_get_data :: proc(node: ^Node) -> NodeData {
         next_paths = next_paths_data,
         begining = node.begining,
         note = node.current_note,
+        channel = node.channel,
     }
 }
 
@@ -59,12 +62,12 @@ node_new_from_data :: proc(node_data: NodeData) -> ^Node {
     node := node_new_with_id(node_data.id, node_data.point)
     node.begining = node_data.begining
     node.current_note = node_data.note
+    node.channel = node_data.channel
     return node
 }
 
 node_new_with_id :: proc(id: NodeID, point: Point) -> ^Node {
     node := new(Node)
-
     node.id = id
 
     if id <= current_node_id {
@@ -72,8 +75,8 @@ node_new_with_id :: proc(id: NodeID, point: Point) -> ^Node {
     }
 
     node.point = point
-
     node.current_note = 60
+    node.channel = 0
 
     node.next_paths = make([dynamic]^Path)
 
@@ -163,7 +166,7 @@ node_play :: proc(node: ^Node) {
     if node.random_note {
         node.current_note = Note(rand.uint32() & 0x7F)
     }
-    midi_play_note(node.current_note)
+    midi_note_command(.Play, node.current_note, node.channel, 127)
     node.playing = true
 
     canvas_schedule_node_stop(node)
@@ -177,7 +180,7 @@ node_play :: proc(node: ^Node) {
 node_stop_playing :: proc(node: ^Node) {
     sync.mutex_lock(&node.playing_mutex)
     node.playing = false
-    midi_stop_note(node.current_note)
+    midi_note_command(.Stop, node.current_note, node.channel, 0)
     sync.mutex_unlock(&node.playing_mutex)
 }
 

@@ -44,18 +44,34 @@ midi_deinit :: proc() {
     pm.Terminate()
 }
 
-midi_play_note :: proc(note: Note) {
-    note_on: pm.Event
-    note_on.timestamp = midi_time_proc()
-    note_on.message = pm.MessageCompose(0x90, i32(note), 127)
-
-    pm.Write(midi_output_stream, &note_on, 1)
+MidiCommand :: enum {
+    Play,
+    Stop,
 }
 
-midi_stop_note :: proc(note: Note) {
-    note_off: pm.Event
-    note_off.timestamp = midi_time_proc()
-    note_off.message = pm.MessageCompose(0x80, i32(note), 0)
+command_codes: [MidiCommand]i32 = {
+    .Play = 0x90,
+    .Stop = 0x80,
+}
 
-    pm.Write(midi_output_stream, &note_off, 1)
+midi_stop_all_notes :: proc() {
+    log.debug("stopping all midi notes")
+    for note in 0..<0x8F {
+        for channel in 0..<10 {
+            midi_note_command(.Stop, Note(note), u8(channel), 0)
+        }
+    }
+}
+
+midi_note_command :: proc(command: MidiCommand, note: Note, channel: u8, velocity: u8) {
+    assert(channel <= 0xF, "Channel should be 16 or less")
+    note_command: pm.Event
+    note_command.timestamp = midi_time_proc()
+    note_command.message = pm.MessageCompose(
+        command_codes[command] + i32(channel),
+        i32(note),
+        i32(velocity)
+    )
+
+    pm.Write(midi_output_stream, &note_command, 1)
 }

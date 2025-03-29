@@ -125,6 +125,10 @@ canvas_gui_node :: proc() {
 canvas_gui_node_properties :: proc(node: ^Node) {
     if imgui.CollapsingHeader("Properties", {.DefaultOpen}) {
         imgui.Checkbox("Begining", &node.begining)
+        channel: c.int = i32(node.channel)
+        imgui.InputInt("Channel", &channel)
+        channel = channel & 0xF
+        node.channel = u8(channel)
     }
 }
 

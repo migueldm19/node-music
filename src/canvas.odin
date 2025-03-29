@@ -199,6 +199,7 @@ canvas_stop_playing :: proc() {
         path_deactivate(path)
     }
     clear(&canvas.active_paths)
+    midi_stop_all_notes()
 }
 
 canvas_start_playing :: proc() {
@@ -323,7 +324,7 @@ canvas_update :: proc() {
     }
 
     canvas_clear_node_delete_queue()
-    if len(canvas.active_paths) == 0 {
+    if len(canvas.active_paths) == 0 && canvas.playing {
         canvas_stop_playing()
     }
 }
