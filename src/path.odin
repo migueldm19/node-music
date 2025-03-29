@@ -5,6 +5,7 @@ import "core:math"
 import "core:math/rand"
 import "core:log"
 import "core:time"
+import "core:sync"
 
 Direction :: enum {
     UP,
@@ -27,6 +28,7 @@ Path :: struct {
     type: PathType,
 
     active: bool,
+    active_mutex: sync.Mutex,
 
     ping_count: i16,
 }
@@ -99,12 +101,16 @@ path_update :: proc(path: ^Path) {
 }
 
 path_deactivate :: proc(path: ^Path) {
+    sync.mutex_lock(&path.active_mutex)
+    defer sync.mutex_unlock(&path.active_mutex)
     path.active = false
     path.ping_count = 0
     node_stop_playing(path.start)
 }
 
 path_activate :: proc(path: ^Path) {
+    sync.mutex_lock(&path.active_mutex)
+    defer sync.mutex_unlock(&path.active_mutex)
     if path.probability < 1.0 {
         if rand.float32() > path.probability do return
     }
@@ -112,7 +118,6 @@ path_activate :: proc(path: ^Path) {
     case .Normal: {
         path.ping_count = 0
         path.active = true
-        canvas_add_active_path(path)
     }
     case .Transfer: {
         node_play(path.end)

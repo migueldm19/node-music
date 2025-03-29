@@ -163,6 +163,7 @@ node_add_path :: proc(node: ^Node, path: ^Path) {
 
 node_play :: proc(node: ^Node) {
     sync.mutex_lock(&node.playing_mutex)
+    defer sync.mutex_unlock(&node.playing_mutex)
     if node.random_note {
         node.current_note = Note(rand.uint32() & 0x7F)
     }
@@ -174,14 +175,13 @@ node_play :: proc(node: ^Node) {
     for path in node.next_paths {
         path_activate(path)
     }
-    sync.mutex_unlock(&node.playing_mutex)
 }
 
 node_stop_playing :: proc(node: ^Node) {
     sync.mutex_lock(&node.playing_mutex)
+    defer sync.mutex_unlock(&node.playing_mutex)
     node.playing = false
     midi_note_command(.Stop, node.current_note, node.channel, 0)
-    sync.mutex_unlock(&node.playing_mutex)
 }
 
 node_update :: proc(node: ^Node) {
@@ -189,6 +189,8 @@ node_update :: proc(node: ^Node) {
         if path.end.deleted {
             path_free(path)
             unordered_remove(&node.next_paths, idx)
+        } else if path.active {
+            canvas_add_active_path(path)
         }
     }
 }

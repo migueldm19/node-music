@@ -83,7 +83,9 @@ midi_check_errors :: proc() {
 
 midi_note_command :: proc(command: MidiCommand, note: Note, channel: u8, velocity: u8) {
     assert(channel <= 0xF, "Channel should be 15 or less")
-    assert(note <= 0x7F, "note should be 127 or less")
+    assert(note <= 0xFF, fmt.tprintf("note %v should be 128 or less", note))
+    midi_check_errors()
+
     note_command: pm.Event
     note_command.timestamp = midi_time_proc()
     note_command.message = pm.MessageCompose(

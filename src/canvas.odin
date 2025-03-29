@@ -8,6 +8,7 @@ import "core:sync"
 import "core:encoding/json"
 import "core:io"
 import "core:os"
+import "core:slice"
 
 Canvas :: struct {
     camera: rl.Camera2D,
@@ -433,8 +434,8 @@ canvas_get_relative_mouse_position :: proc() -> rl.Vector2 {
 
 canvas_add_active_path :: proc(path: ^Path) {
     sync.mutex_lock(&canvas.active_paths_mutex)
-    append(&canvas.active_paths, path)
-    sync.mutex_unlock(&canvas.active_paths_mutex)
+    defer sync.mutex_unlock(&canvas.active_paths_mutex)
+    if !slice.any_of(canvas.active_paths[:], path) do append(&canvas.active_paths, path)
 }
 
 canvas_metronome_ping :: proc() {
