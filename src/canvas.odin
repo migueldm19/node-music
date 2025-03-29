@@ -412,15 +412,15 @@ canvas_update_possible_node_position :: proc() {
     offset_x := math.mod_f32(pos.x, f32(NODE_SEPARATION))
     offset_y := math.mod_f32(pos.y, f32(NODE_SEPARATION))
 
+    if math.abs(offset_x) > NODE_SEPARATION / 2 {
+        offset_x = -(NODE_SEPARATION - offset_x) if offset_x > 0 else (NODE_SEPARATION + offset_x)
+    }
     pos.x -= offset_x
-    if offset_x > NODE_SEPARATION / 2 {
-        pos.x += NODE_SEPARATION
-    }
 
-    pos.y -= offset_y
-    if offset_y > NODE_SEPARATION / 2 {
-        pos.y += NODE_SEPARATION
+    if math.abs(offset_y) > NODE_SEPARATION / 2 {
+        offset_y = -(NODE_SEPARATION - offset_y) if offset_y > 0 else (NODE_SEPARATION + offset_y)
     }
+    pos.y -= offset_y
 
     canvas.possible_node_position = pos
 }
