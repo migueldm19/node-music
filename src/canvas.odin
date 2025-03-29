@@ -426,10 +426,7 @@ canvas_update_possible_node_position :: proc() {
 }
 
 canvas_get_relative_mouse_position :: proc() -> rl.Vector2 {
-    camera_position := canvas.camera.target - canvas.camera.offset
-    position := rl.GetMousePosition()
-
-    return position + camera_position
+    return rl.GetScreenToWorld2D(rl.GetMousePosition(), canvas.camera)
 }
 
 canvas_add_active_path :: proc(path: ^Path) {
