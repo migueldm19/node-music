@@ -194,7 +194,7 @@ canvas_schedule_node_stop :: proc(node: ^Node) {
 canvas_stop_playing :: proc() {
     canvas.playing = false
 
-    midi_stop_all_notes()
+    canvas_stop_playing_nodes()
     for path in canvas.active_paths {
         path_deactivate(path)
     }

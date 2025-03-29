@@ -36,24 +36,18 @@ midi_init :: proc() {
     if err != .NoError {
         log.errorf("Error opening default PortMidi output: %v", err)
     }
-
-    notes_playing = make([dynamic]Note)
 }
 
 midi_deinit :: proc() {
     log.debug("Deinitializing midi output stream")
     pm.Close(midi_output_stream)
     pm.Terminate()
-    delete(notes_playing)
 }
-
-notes_playing: [dynamic]Note
 
 midi_play_note :: proc(note: Note) {
     note_on: pm.Event
     note_on.timestamp = midi_time_proc()
     note_on.message = pm.MessageCompose(0x90, i32(note), 127)
-    append(&notes_playing, note)
 
     pm.Write(midi_output_stream, &note_on, 1)
 }
@@ -64,11 +58,4 @@ midi_stop_note :: proc(note: Note) {
     note_off.message = pm.MessageCompose(0x80, i32(note), 0)
 
     pm.Write(midi_output_stream, &note_off, 1)
-}
-
-midi_stop_all_notes :: proc() {
-    for note in notes_playing {
-        midi_stop_note(note)
-    }
-    clear(&notes_playing)
 }
