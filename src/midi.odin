@@ -30,18 +30,28 @@ midi_init :: proc() {
         log.errorf("Error initializing PortMidi: %v", err)
         return
     }
-    output_device := pm.GetDefaultOutputDeviceID()
-
-    err = pm.OpenOutput(&midi_output_stream, output_device, nil, 0, midi_time_proc, nil, 0)
-    if err != .NoError {
-        log.errorf("Error opening default PortMidi output: %v", err)
-    }
+    midi_connect()
 }
 
 midi_deinit :: proc() {
     log.debug("Deinitializing midi output stream")
     pm.Close(midi_output_stream)
     pm.Terminate()
+}
+
+midi_connect :: proc() {
+    output_device := pm.GetDefaultOutputDeviceID()
+
+    err := pm.OpenOutput(&midi_output_stream, output_device, nil, 0, midi_time_proc, nil, 0)
+    if err != .NoError {
+        log.errorf("Error opening default PortMidi output: %v", err)
+    }
+}
+
+midi_reconnect :: proc() {
+    log.debug("Reconnecting midi stream")
+    pm.Close(midi_output_stream)
+    midi_connect()
 }
 
 MidiCommand :: enum {
@@ -64,6 +74,11 @@ midi_stop_all_notes :: proc() {
 }
 
 midi_note_command :: proc(command: MidiCommand, note: Note, channel: u8, velocity: u8) {
+    if pm.HasHostError(midi_output_stream) {
+        buff: [256]byte
+        log.debug("Midi host error", pm.GetHostErrorText(buff[:]))
+        midi_reconnect()
+    }
     assert(channel <= 0xF, "Channel should be 16 or less")
     note_command: pm.Event
     note_command.timestamp = midi_time_proc()
