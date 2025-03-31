@@ -16,7 +16,7 @@ Canvas :: struct {
     window_height: i32,
     window_width: i32,
 
-    subdivision: int,
+    config: CanvasConfiguration,
 
     nodes: map[Point]^Node,
     node_delete_queue: [dynamic]^Node,
@@ -34,9 +34,15 @@ Canvas :: struct {
     playing: bool,
 }
 
+CanvasConfiguration :: struct {
+    subdivision: i32,
+    bpm: i32,
+}
+
 canvas: ^Canvas
 
 CanvasData :: struct {
+    config: CanvasConfiguration,
     nodes: [dynamic]NodeData,
 }
 
@@ -48,7 +54,7 @@ canvas_get_data :: proc() -> CanvasData {
         append(&nodes_data, node_get_data(node))
     }
 
-    return CanvasData{ nodes=nodes_data }
+    return CanvasData{ nodes=nodes_data, config=canvas.config }
 }
 
 canvas_data_delete :: proc(canvas_data: CanvasData) {
@@ -69,7 +75,8 @@ canvas_init :: proc() {
     canvas.camera.offset = {f32(canvas.window_width) / 2.0, f32(canvas.window_height) / 2.0}
     canvas.camera.rotation = 0.0
 
-    canvas.subdivision = SUBDIVISION
+    canvas.config.subdivision = 4
+    canvas.config.bpm = 60
 
     canvas.nodes = make(map[Point]^Node)
     canvas.node_delete_queue = make([dynamic]^Node)
@@ -109,6 +116,8 @@ canvas_load_from_data :: proc(canvas_data: CanvasData) {
             node_add_path(start_node, new_path)
         }
     }
+
+    canvas.config = canvas_data.config
 }
 
 canvas_load_file :: proc(path: string) {
@@ -232,7 +241,7 @@ canvas_draw_nodes :: proc() {
 
 canvas_draw_grid :: proc() {
     camera_position: rl.Vector2 = canvas.camera.target - canvas.camera.offset
-    step_size := f32(NODE_SEPARATION * canvas.subdivision)
+    step_size := f32(NODE_SEPARATION * canvas.config.subdivision)
 
     zoom_offset: f32
     if canvas.camera.zoom < 1 {
@@ -452,4 +461,8 @@ canvas_metronome_ping :: proc() {
             canvas_add_active_path(path)
         }
     }
+}
+
+canvas_get_config :: proc() -> CanvasConfiguration {
+    return canvas.config
 }

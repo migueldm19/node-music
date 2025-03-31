@@ -21,12 +21,20 @@ metronome_thread_deinit :: proc() {
     thread.destroy(metronome_thread)
 }
 
+sleep_time: time.Duration
+
+metronome_update_sleep_time :: proc() {
+    config := canvas_get_config()
+    nanoseconds_between_subbeats : = ((60.0 / f32(config.bpm)) / f32(config.subdivision)) * 1000000000
+    sleep_time = time.Duration(nanoseconds_between_subbeats)  * time.Nanosecond
+}
+
 metronome_thread_proc :: proc(t: ^thread.Thread) {
-    nanoseconds_between_subbeats : = ((60.0 / BPM) / SUBDIVISION) * 1000000000 * time.Nanosecond
-    log.info("Metronome thread started. Duration between subbeats =", nanoseconds_between_subbeats)
+    metronome_update_sleep_time()
+    log.info("Metronome thread started. Duration between subbeats =", sleep_time)
 
     for {
-        time.accurate_sleep(nanoseconds_between_subbeats)
+        time.accurate_sleep(sleep_time)
         canvas_metronome_ping()
     }
 }

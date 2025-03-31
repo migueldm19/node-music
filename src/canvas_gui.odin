@@ -74,9 +74,28 @@ canvas_gui_main_menu:: proc() {
     //TODO: Change with logos?
     if imgui.Begin("Main menu") {
         canvas_gui_play_stop()
+        canvas_gui_main_config()
         canvas_gui_tool_selection()
     }
     imgui.End()
+}
+
+canvas_gui_main_config :: proc() {
+    new_config := canvas.config
+    imgui.InputInt("BPM", &new_config.bpm)
+    imgui.InputInt("Subdivision", &new_config.subdivision)
+    if new_config.bpm != canvas.config.bpm &&
+       new_config.bpm > 0 &&
+       new_config.bpm <= MAX_BPM {
+        canvas.config.bpm = new_config.bpm
+        metronome_update_sleep_time()
+    }
+    if new_config.subdivision != canvas.config.subdivision &&
+       new_config.subdivision > 0 &&
+       new_config.subdivision <= MAX_SUBDIVISION {
+        canvas.config.subdivision = new_config.subdivision
+        metronome_update_sleep_time()
+    }
 }
 
 canvas_gui_tool_selection :: proc() {
