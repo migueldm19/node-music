@@ -6,6 +6,8 @@ import "core:math/rand"
 import "core:log"
 import "core:sync"
 
+import "midi"
+
 NodeID :: distinct u16
 current_node_id: NodeID = 0
 
@@ -22,7 +24,7 @@ Node :: struct {
     playing: bool,
     playing_mutex: sync.Mutex,
 
-    current_note: Note,
+    current_note: midi.Note,
     channel: u8,
     random_note: bool,
 }
@@ -32,7 +34,7 @@ NodeData :: struct {
     point: Point,
     next_paths: [dynamic]PathData,
     begining: bool,
-    note: Note,
+    note: midi.Note,
     channel: u8,
 }
 
@@ -98,7 +100,7 @@ node_free :: proc(node: ^Node) {
     free(node)
 }
 
-node_change_note :: proc(node: ^Node, note: Note) {
+node_change_note :: proc(node: ^Node, note: midi.Note) {
     node.current_note = note
 }
 
@@ -165,9 +167,9 @@ node_play :: proc(node: ^Node) {
     sync.mutex_lock(&node.playing_mutex)
     defer sync.mutex_unlock(&node.playing_mutex)
     if node.random_note {
-        node.current_note = Note(rand.uint32() & 0x7F)
+        node.current_note = midi.Note(rand.uint32() & 0x7F)
     }
-    midi_note_command(.Play, node.current_note, node.channel, 127)
+    midi.note_command(.Play, node.current_note, node.channel, 127)
     node.playing = true
 
     canvas_schedule_node_stop(node)
@@ -181,7 +183,7 @@ node_stop_playing :: proc(node: ^Node) {
     sync.mutex_lock(&node.playing_mutex)
     defer sync.mutex_unlock(&node.playing_mutex)
     node.playing = false
-    midi_note_command(.Stop, node.current_note, node.channel, 0)
+    midi.note_command(.Stop, node.current_note, node.channel, 0)
 }
 
 node_update :: proc(node: ^Node) {

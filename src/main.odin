@@ -5,6 +5,8 @@ import "core:mem"
 import "core:thread"
 import rl "vendor:raylib"
 
+import "midi"
+
 print_memory_leaks_and_cleanup :: proc(track: ^mem.Tracking_Allocator) {
     if len(track.allocation_map) > 0 {
         log.warnf("=== %v allocations not freed: ===\n", len(track.allocation_map))
@@ -38,8 +40,8 @@ main :: proc() {
     rl.InitAudioDevice()
     defer rl.CloseAudioDevice()
 
-    midi_init()
-    defer midi_deinit()
+    midi.init()
+    defer midi.deinit()
 
     metronome_thread_init()
     defer metronome_thread_deinit()

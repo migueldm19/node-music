@@ -12,6 +12,8 @@ import "core:strings"
 import "core:strconv"
 import "core:c"
 
+import "midi"
+
 canvas_gui_draw_and_update :: proc() {
     canvas_gui_begin()
         canvas_gui_main_menu()
@@ -165,7 +167,7 @@ canvas_gui_note_selection :: proc(node: ^Node) {
 
             if imgui.IsItemEdited() {
                 log.debugf("selected %v", selected_note)
-                node_change_note(node, Note(selected_note))
+                node_change_note(node, midi.Note(selected_note))
             }
         }
     }
@@ -193,7 +195,7 @@ canvas_gui_init :: proc() {
 
     notes_str : [128]string
     for i in 0..<128 {
-        possible_notes_for_node[i] = note_to_string(Note(i))
+        possible_notes_for_node[i] = midi.note_to_string(midi.Note(i))
     }
 }
 

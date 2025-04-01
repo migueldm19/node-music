@@ -10,6 +10,8 @@ import "core:io"
 import "core:os"
 import "core:slice"
 
+import "midi"
+
 Canvas :: struct {
     camera: rl.Camera2D,
 
@@ -209,7 +211,7 @@ canvas_stop_playing :: proc() {
         path_deactivate(path)
     }
     clear(&canvas.active_paths)
-    midi_stop_all_notes()
+    midi.stop_all_notes()
 }
 
 canvas_start_playing :: proc() {
