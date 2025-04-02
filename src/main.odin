@@ -6,6 +6,7 @@ import "core:thread"
 import rl "vendor:raylib"
 
 import "midi"
+import "canvas"
 
 print_memory_leaks_and_cleanup :: proc(track: ^mem.Tracking_Allocator) {
     if len(track.allocation_map) > 0 {
@@ -43,19 +44,19 @@ main :: proc() {
     midi.init()
     defer midi.deinit()
 
-    metronome_thread_init()
-    defer metronome_thread_deinit()
+    canvas.metronome_thread_init()
+    defer canvas.metronome_thread_deinit()
 
-    canvas_init()
-    defer canvas_deinit()
+    canvas.init()
+    defer canvas.deinit()
 
-    canvas_gui_init()
-    defer canvas_gui_deinit()
+    canvas.gui_init()
+    defer canvas.gui_deinit()
 
     for !rl.WindowShouldClose() {
         rl.BeginDrawing()
-        canvas_draw()
-        canvas_update()
+        canvas.draw()
+        canvas.update()
         rl.EndDrawing()
     }
 }

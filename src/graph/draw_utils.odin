@@ -1,6 +1,8 @@
-package main
+package graph
 
 import rl "vendor:raylib"
+
+import "../config"
 
 ARROW_POINT_LEN :: 10
 
@@ -55,9 +57,9 @@ draw_path :: proc(start, end: rl.Vector2, type: PathType, active: bool = false) 
 }
 
 draw_transfer_path :: proc(start, end: rl.Vector2) {
-    rl.DrawLineEx(start, end, PATH_THICKNESS, TRANSFER_PATH_COLOR)
-    rl.DrawCircleLinesV(start, 8, TRANSFER_PATH_COLOR)
-    rl.DrawCircleLinesV(end, 5, TRANSFER_PATH_COLOR)
+    rl.DrawLineEx(start, end, config.PATH_THICKNESS, config.TRANSFER_PATH_COLOR)
+    rl.DrawCircleLinesV(start, 8, config.TRANSFER_PATH_COLOR)
+    rl.DrawCircleLinesV(end, 5, config.TRANSFER_PATH_COLOR)
 }
 
 draw_normal_path :: proc(start, end: rl.Vector2, active: bool = false) {
@@ -66,33 +68,33 @@ draw_normal_path :: proc(start, end: rl.Vector2, active: bool = false) {
 
     direction := get_direction(start, end)
 
-    color := ACTIVE_PATH_COLOR if active else UNACTIVE_PATH_COLOR
+    color := config.ACTIVE_PATH_COLOR if active else config.UNACTIVE_PATH_COLOR
 
     if start_position.x != end_position.x {
         rl.DrawLineEx(
             start_position,
             {end_position.x, start_position.y},
-            PATH_THICKNESS,
+            config.PATH_THICKNESS,
             color
         )
         start_position = rl.Vector2{end_position.x, start_position.y}
     }
 
     switch direction {
-    case .LEFT: end_position.x += NODE_RADIUS
-    case .RIGHT: end_position.x -= NODE_RADIUS
-    case .UP: end_position.y += NODE_RADIUS
-    case .DOWN: end_position.y -= NODE_RADIUS
+    case .LEFT: end_position.x += config.NODE_RADIUS
+    case .RIGHT: end_position.x -= config.NODE_RADIUS
+    case .UP: end_position.y += config.NODE_RADIUS
+    case .DOWN: end_position.y -= config.NODE_RADIUS
     }
 
     if start_position.y != end_position.y {
         rl.DrawLineEx(
             start_position,
             {start_position.x, end_position.y},
-            PATH_THICKNESS,
+            config.PATH_THICKNESS,
             color
         );
     }
 
-    draw_arrow_point(end_position, direction, PATH_THICKNESS, color)
+    draw_arrow_point(end_position, direction, config.PATH_THICKNESS, color)
 }

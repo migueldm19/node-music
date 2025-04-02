@@ -1,4 +1,4 @@
-package main
+package graph
 
 import rl "vendor:raylib"
 import "core:fmt"
@@ -6,7 +6,8 @@ import "core:math/rand"
 import "core:log"
 import "core:sync"
 
-import "midi"
+import "../midi"
+import "../config"
 
 NodeID :: distinct u16
 current_node_id: NodeID = 0
@@ -115,30 +116,30 @@ node_dec_note :: proc(node: ^Node) {
 node_draw :: proc(node: ^Node) {
     position := point_get_position(node.point)
 
-    color := BEGIN_NODE_COLOR if node.begining else NODE_COLOR
+    color := config.BEGIN_NODE_COLOR if node.begining else config.NODE_COLOR
 
     if(node.playing) {
         rl.DrawCircleV(
             position,
-            NODE_RADIUS,
+            config.NODE_RADIUS,
             color
         )
     } else {
         rl.DrawCircleLinesV(
             position,
-            NODE_RADIUS,
+            config.NODE_RADIUS,
             color
         )
     }
 
-    note_text_position_x := i32(position.x) + NODE_RADIUS + NODE_NOTE_TEXT_OFFSET
-    note_text_position_y := i32(position.y) - NODE_RADIUS - NODE_NOTE_TEXT_OFFSET
+    note_text_position_x := i32(position.x) + config.NODE_RADIUS + config.NODE_NOTE_TEXT_OFFSET
+    note_text_position_y := i32(position.y) - config.NODE_RADIUS - config.NODE_NOTE_TEXT_OFFSET
 
     if node.selected {
-        position = position - NODE_RADIUS
+        position = position - config.NODE_RADIUS
 
         rl.DrawRectangleRoundedLines(
-            rl.Rectangle{position.x, position.y, NODE_RADIUS * 2, NODE_RADIUS * 2},
+            rl.Rectangle{position.x, position.y, config.NODE_RADIUS * 2, config.NODE_RADIUS * 2},
             0.5,
             4,
             2.0,
@@ -147,8 +148,8 @@ node_draw :: proc(node: ^Node) {
 
         rl.DrawText(
             fmt.ctprint(node.id),
-            i32(position.x) + NODE_RADIUS + 10,
-            i32(position.y) - NODE_RADIUS - 3,
+            i32(position.x) + config.NODE_RADIUS + 10,
+            i32(position.y) - config.NODE_RADIUS - 3,
             3,
             rl.BLACK
         )

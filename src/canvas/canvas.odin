@@ -1,7 +1,7 @@
-package main
+package canvas
 
 import rl "vendor:raylib"
-import imgui "../deps/odin-imgui"
+import imgui "../../deps/odin-imgui"
 import "core:math"
 import "core:log"
 import "core:sync"
@@ -10,7 +10,9 @@ import "core:io"
 import "core:os"
 import "core:slice"
 
-import "midi"
+import "../midi"
+import "../graph"
+import "../config"
 
 Canvas :: struct {
     camera: rl.Camera2D,
@@ -20,17 +22,17 @@ Canvas :: struct {
 
     config: CanvasConfiguration,
 
-    nodes: map[Point]^Node,
-    node_delete_queue: [dynamic]^Node,
+    nodes: map[graph.Point]^graph.Node,
+    node_delete_queue: [dynamic]^graph.Node,
 
-    active_paths: [dynamic]^Path,
+    active_paths: [dynamic]^graph.Path,
     active_paths_mutex: sync.Mutex,
 
     possible_node_position: rl.Vector2,
 
     tool_selected: Tool,
 
-    selected_node_for_path: ^Node,
+    selected_node_for_path: ^graph.Node,
 
     playing: bool,
 }
@@ -44,28 +46,28 @@ canvas: ^Canvas
 
 CanvasData :: struct {
     config: CanvasConfiguration,
-    nodes: [dynamic]NodeData,
+    nodes: [dynamic]graph.NodeData,
 }
 
-canvas_get_data :: proc() -> CanvasData {
+get_data :: proc() -> CanvasData {
     log.debug("Generating canvas data")
-    nodes_data := make([dynamic]NodeData, 0, len(canvas.nodes))
+    nodes_data := make([dynamic]graph.NodeData, 0, len(canvas.nodes))
 
     for _, node in canvas.nodes {
-        append(&nodes_data, node_get_data(node))
+        append(&nodes_data, graph.node_get_data(node))
     }
 
     return CanvasData{ nodes=nodes_data, config=canvas.config }
 }
 
-canvas_data_delete :: proc(canvas_data: CanvasData) {
+data_delete :: proc(canvas_data: CanvasData) {
     for node in canvas_data.nodes {
-        node_data_delete(node)
+        graph.node_data_delete(node)
     }
     delete(canvas_data.nodes)
 }
 
-canvas_init :: proc() {
+init :: proc() {
     canvas = new(Canvas)
 
     canvas.window_height = rl.GetScreenHeight()
@@ -79,18 +81,18 @@ canvas_init :: proc() {
     canvas.config.subdivision = 4
     canvas.config.bpm = 60
 
-    canvas.nodes = make(map[Point]^Node)
-    canvas.node_delete_queue = make([dynamic]^Node)
+    canvas.nodes = make(map[graph.Point]^graph.Node)
+    canvas.node_delete_queue = make([dynamic]^graph.Node)
 
-    canvas.active_paths = make([dynamic]^Path, 0, 30)
+    canvas.active_paths = make([dynamic]^graph.Path, 0, 30)
 }
 
-canvas_deinit :: proc() {
+deinit :: proc() {
     log.debug("Freeing canvas")
 
-    canvas_stop_playing()
+    stop_playing()
     for _, node in canvas.nodes {
-        node_free(node)
+        graph.node_free(node)
     }
 
     delete(canvas.nodes)
@@ -100,26 +102,26 @@ canvas_deinit :: proc() {
     canvas = nil
 }
 
-canvas_load_from_data :: proc(canvas_data: CanvasData) {
-    nodes_by_id := make(map[NodeID]^Node)
+load_from_data :: proc(canvas_data: CanvasData) {
+    nodes_by_id := make(map[graph.NodeID]^graph.Node)
     defer delete(nodes_by_id)
 
     for node_data in canvas_data.nodes {
-        nodes_by_id[node_data.id] = canvas_add_node(node_data)
+        nodes_by_id[node_data.id] = add_node(node_data)
     }
 
     for node_data in canvas_data.nodes {
         for path_data in node_data.next_paths {
             start_node := nodes_by_id[path_data.start]
-            new_path := path_new(start_node, nodes_by_id[path_data.end], path_data.type, path_data.probability)
-            node_add_path(start_node, new_path)
+            new_path := graph.path_new(start_node, nodes_by_id[path_data.end], path_data.type, path_data.probability)
+            graph.node_add_path(start_node, new_path)
         }
     }
 
     canvas.config = canvas_data.config
 }
 
-canvas_load_file :: proc(path: string) {
+load_from_file :: proc(path: string) {
     data, ok := os.read_entire_file(path)
     defer delete(data)
 
@@ -131,21 +133,21 @@ canvas_load_file :: proc(path: string) {
     log.debugf("Unmarshaling canvas data")
     canvas_data: CanvasData
     err : json.Unmarshal_Error= json.unmarshal(data, &canvas_data)
-    defer canvas_data_delete(canvas_data)
+    defer data_delete(canvas_data)
 
     if err != nil {
         log.warnf("Error unmarshalling data: %v", err)
         return
     }
 
-    canvas_deinit()
-    canvas_init()
-    canvas_load_from_data(canvas_data)
+    deinit()
+    init()
+    load_from_data(canvas_data)
 }
 
-canvas_serialize :: proc(path: string) {
-    canvas_data := canvas_get_data()
-    defer canvas_data_delete(canvas_data)
+serialize :: proc(path: string) {
+    canvas_data := get_data()
+    defer data_delete(canvas_data)
 
     log.debugf("Marshaling canvas data")
 
@@ -177,67 +179,67 @@ canvas_serialize :: proc(path: string) {
     }
 }
 
-canvas_draw :: proc() {
-    rl.ClearBackground(BG_COLOR)
+draw :: proc() {
+    rl.ClearBackground(config.BG_COLOR)
     rl.BeginMode2D(canvas.camera)
-        canvas_draw_grid()
-        canvas_draw_possible_elements()
-        canvas_draw_nodes()
+        draw_grid()
+        draw_possible_elements()
+        draw_nodes()
     rl.EndMode2D()
-    canvas_gui_draw_and_update()
+    gui_draw_and_update()
 }
 
-canvas_stop_playing_nodes :: proc() {
+stop_playing_nodes :: proc() {
     for _, node in canvas.nodes {
-        if node.playing do node_stop_playing(node)
+        if node.playing do graph.node_stop_playing(node)
     }
 }
 
-canvas_stop_playing :: proc() {
+stop_playing :: proc() {
     canvas.playing = false
 
-    canvas_stop_playing_nodes()
+    stop_playing_nodes()
     for path in canvas.active_paths {
-        path_deactivate(path)
+        graph.path_deactivate(path)
     }
     clear(&canvas.active_paths)
     midi.stop_all_notes()
 }
 
-canvas_start_playing :: proc() {
+start_playing :: proc() {
     canvas.playing = true
     for _, node in canvas.nodes {
         if node.begining {
-            node_play(node)
+            graph.node_play(node)
         }
     }
 }
 
-canvas_draw_possible_elements :: proc() {
+draw_possible_elements :: proc() {
     switch canvas.tool_selected {
     case .MouseTool:
-        canvas_draw_possible_selection()
+        draw_possible_selection()
     case .NodeTool:
-        canvas_draw_possible_node()
+        draw_possible_node()
     case .NormalPathTool, .TransferPathTool:
-        canvas_draw_possible_path()
-        canvas_draw_possible_selection()
+        draw_possible_path()
+        draw_possible_selection()
     }
 }
 
-canvas_draw_nodes :: proc() {
+draw_nodes :: proc() {
     for _, node in canvas.nodes {
-        node_draw(node)
+        graph.node_draw(node)
     }
 }
 
-canvas_draw_grid :: proc() {
+draw_grid :: proc() {
     camera_position: rl.Vector2 = canvas.camera.target - canvas.camera.offset
-    step_size := f32(NODE_SEPARATION * canvas.config.subdivision)
+    step_size := f32(config.NODE_SEPARATION * canvas.config.subdivision)
 
     zoom_offset: f32
     if canvas.camera.zoom < 1 {
-        zoom_offset = ZOOM_OFFSET_GRID / canvas.camera.zoom
+        zoom_offset = config.ZOOM_OFFSET_GRID / canvas.camera.zoom
     }
 
     offset_x := math.mod_f32(camera_position.x - zoom_offset, f32(step_size))
@@ -250,7 +252,7 @@ canvas_draw_grid :: proc() {
         rl.DrawLineV(
             {i, camera_position.y - zoom_offset},
             {i, f32(canvas.window_height) + camera_position.y + zoom_offset},
-            LINES_COLOR
+            config.LINES_COLOR
         )
     }
 
@@ -261,40 +263,40 @@ canvas_draw_grid :: proc() {
         rl.DrawLineV(
             {camera_position.x - zoom_offset, i},
             {f32(canvas.window_width) + camera_position.x + zoom_offset, i},
-            LINES_COLOR
+            config.LINES_COLOR
         )
     }
 
-    offset_x = math.mod_f32(camera_position.x - zoom_offset, f32(NODE_SEPARATION))
-    offset_y = math.mod_f32(camera_position.y - zoom_offset, f32(NODE_SEPARATION))
+    offset_x = math.mod_f32(camera_position.x - zoom_offset, f32(config.NODE_SEPARATION))
+    offset_y = math.mod_f32(camera_position.y - zoom_offset, f32(config.NODE_SEPARATION))
 
     // Points
     for i:= camera_position.x - offset_x - zoom_offset;
     i < f32(canvas.window_width) + camera_position.x + zoom_offset;
-    i += NODE_SEPARATION {
+    i += config.NODE_SEPARATION {
         for j:= camera_position.y - offset_y - zoom_offset;
         j < f32(canvas.window_height) + camera_position.y + zoom_offset;
-        j += NODE_SEPARATION {
-            rl.DrawCircleV({i, j}, POINTS_SIZE, POINTS_COLOR)
+        j += config.NODE_SEPARATION {
+            rl.DrawCircleV({i, j}, config.POINTS_SIZE, config.POINTS_COLOR)
         }
         for j:= camera_position.y - offset_y - zoom_offset;
         j > -zoom_offset - camera_position.x;
-        j -= NODE_SEPARATION {
-            rl.DrawCircleV({i, j}, POINTS_SIZE, POINTS_COLOR)
+        j -= config.NODE_SEPARATION {
+            rl.DrawCircleV({i, j}, config.POINTS_SIZE, config.POINTS_COLOR)
         }
     }
 }
 
-canvas_draw_possible_selection :: proc() {
-    possible_point := point_from_vector(canvas.possible_node_position)
+draw_possible_selection :: proc() {
+    possible_point := graph.point_from_vector(canvas.possible_node_position)
     possible_node, ok := canvas.nodes[possible_point]
 
     if !ok do return
 
-    pos := point_get_position(possible_node.point) - NODE_RADIUS
+    pos := graph.point_get_position(possible_node.point) - config.NODE_RADIUS
 
     rl.DrawRectangleRoundedLines(
-        rl.Rectangle{pos.x, pos.y, NODE_RADIUS * 2, NODE_RADIUS * 2},
+        rl.Rectangle{pos.x, pos.y, config.NODE_RADIUS * 2, config.NODE_RADIUS * 2},
         0.5,
         4,
         3,
@@ -302,60 +304,60 @@ canvas_draw_possible_selection :: proc() {
     )
 }
 
-canvas_draw_possible_node :: proc() {
-    rl.DrawCircleLinesV(canvas.possible_node_position, NODE_RADIUS / 2, NODE_COLOR)
+draw_possible_node :: proc() {
+    rl.DrawCircleLinesV(canvas.possible_node_position, config.NODE_RADIUS / 2, config.NODE_COLOR)
 }
 
-canvas_draw_possible_path :: proc() {
+draw_possible_path :: proc() {
     if canvas.selected_node_for_path != nil {
-    start_position := point_get_position(canvas.selected_node_for_path.point)
-        end_position := canvas_get_relative_mouse_position()
-        type: PathType = .Normal if canvas.tool_selected == .NormalPathTool else .Transfer
-        draw_path(start_position, end_position, type)
+    start_position := graph.point_get_position(canvas.selected_node_for_path.point)
+        end_position := get_relative_mouse_position()
+        type: graph.PathType = .Normal if canvas.tool_selected == .NormalPathTool else .Transfer
+        graph.draw_path(start_position, end_position, type)
     }
 }
 
-canvas_update :: proc() {
-    canvas_update_camera()
-    canvas_update_possible_node_position()
+update :: proc() {
+    update_camera()
+    update_possible_node_position()
 
     imgui_io := imgui.GetIO()
 
     if !imgui_io.WantCaptureMouse && !imgui_io.WantCaptureKeyboard {
-        canvas_handle_input()
+        handle_input()
     }
 
     for _, node in canvas.nodes {
-        node_update(node)
+        graph.node_update(node)
         for path in node.next_paths {
-            if path.active do canvas_add_active_path(path)
+            if path.active do add_active_path(path)
         }
     }
 
-    canvas_clear_node_delete_queue()
+    clear_node_delete_queue()
     if len(canvas.active_paths) == 0 && canvas.playing {
-        canvas_stop_playing()
+        stop_playing()
     }
 }
 
-canvas_inc_all_selected_nodes :: proc() {
+inc_all_selected_nodes :: proc() {
     for _, node in canvas.nodes {
         if node.selected {
-            node_inc_note(node)
+            graph.node_inc_note(node)
         }
     }
 }
 
 
-canvas_dec_all_selected_nodes :: proc() {
+dec_all_selected_nodes :: proc() {
     for _, node in canvas.nodes {
         if node.selected {
-            node_dec_note(node)
+            graph.node_dec_note(node)
         }
     }
 }
 
-canvas_set_begining_nodes :: proc() {
+set_begining_nodes :: proc() {
     for _, node in canvas.nodes {
         if node.selected {
             node.begining = !node.begining
@@ -363,14 +365,14 @@ canvas_set_begining_nodes :: proc() {
     }
 }
 
-canvas_unselect_all_nodes :: proc() {
+unselect_all_nodes :: proc() {
     for _, node in canvas.nodes {
         node.selected = false
     }
 }
 
-canvas_delete_all_selected_nodes :: proc() {
-    canvas_stop_playing()
+delete_all_selected_nodes :: proc() {
+    stop_playing()
     for point, node in canvas.nodes {
         if node.selected {
             node.deleted = true
@@ -380,84 +382,84 @@ canvas_delete_all_selected_nodes :: proc() {
     }
 }
 
-canvas_clear_node_delete_queue :: proc() {
+clear_node_delete_queue :: proc() {
     for node in canvas.node_delete_queue {
-        node_free(node)
+        graph.node_free(node)
     }
 
     clear(&canvas.node_delete_queue)
 }
 
-canvas_create_new_node :: proc(position: rl.Vector2) {
-    possible_point := point_from_vector(position)
+create_new_node :: proc(position: rl.Vector2) {
+    possible_point := graph.point_from_vector(position)
 
     if !(possible_point in canvas.nodes) {
-        new_node := node_new(possible_point)
+        new_node := graph.node_new(possible_point)
         canvas.nodes[possible_point] = new_node
     }
 }
 
-canvas_add_node :: proc(node_data: NodeData) -> ^Node {
-    new_node := node_new_from_data(node_data)
+add_node :: proc(node_data: graph.NodeData) -> ^graph.Node {
+    new_node := graph.node_new_from_data(node_data)
     canvas.nodes[new_node.point] = new_node
     return new_node
 }
 
-canvas_update_camera :: proc() {
-    canvas.camera.zoom += (f32(rl.GetMouseWheelMove()) * ZOOM_SPEED)
+update_camera :: proc() {
+    canvas.camera.zoom += (f32(rl.GetMouseWheelMove()) * config.ZOOM_SPEED)
 
-    if canvas.camera.zoom > MAX_ZOOM do canvas.camera.zoom = MAX_ZOOM
-    if canvas.camera.zoom < MIN_ZOOM do canvas.camera.zoom = MIN_ZOOM
+    if canvas.camera.zoom > config.MAX_ZOOM do canvas.camera.zoom = config.MAX_ZOOM
+    if canvas.camera.zoom < config.MIN_ZOOM do canvas.camera.zoom = config.MIN_ZOOM
 
     if rl.IsMouseButtonDown(.MIDDLE) {
         canvas.camera.target -= rl.GetMouseDelta()
     }
 }
 
-canvas_update_possible_node_position :: proc() {
-    pos := canvas_get_relative_mouse_position()
+update_possible_node_position :: proc() {
+    pos := get_relative_mouse_position()
 
-    offset_x := math.mod_f32(pos.x, f32(NODE_SEPARATION))
-    offset_y := math.mod_f32(pos.y, f32(NODE_SEPARATION))
+    offset_x := math.mod_f32(pos.x, f32(config.NODE_SEPARATION))
+    offset_y := math.mod_f32(pos.y, f32(config.NODE_SEPARATION))
 
-    if math.abs(offset_x) > NODE_SEPARATION / 2 {
-        offset_x = -(NODE_SEPARATION - offset_x) if offset_x > 0 else (NODE_SEPARATION + offset_x)
+    if math.abs(offset_x) > config.NODE_SEPARATION / 2 {
+        offset_x = -(config.NODE_SEPARATION - offset_x) if offset_x > 0 else (config.NODE_SEPARATION + offset_x)
     }
     pos.x -= offset_x
 
-    if math.abs(offset_y) > NODE_SEPARATION / 2 {
-        offset_y = -(NODE_SEPARATION - offset_y) if offset_y > 0 else (NODE_SEPARATION + offset_y)
+    if math.abs(offset_y) > config.NODE_SEPARATION / 2 {
+        offset_y = -(config.NODE_SEPARATION - offset_y) if offset_y > 0 else (config.NODE_SEPARATION + offset_y)
     }
     pos.y -= offset_y
 
     canvas.possible_node_position = pos
 }
 
-canvas_get_relative_mouse_position :: proc() -> rl.Vector2 {
+get_relative_mouse_position :: proc() -> rl.Vector2 {
     return rl.GetScreenToWorld2D(rl.GetMousePosition(), canvas.camera)
 }
 
-canvas_add_active_path :: proc(path: ^Path) {
+add_active_path :: proc(path: ^graph.Path) {
     sync.mutex_lock(&canvas.active_paths_mutex)
     defer sync.mutex_unlock(&canvas.active_paths_mutex)
     if !slice.any_of(canvas.active_paths[:], path) do append(&canvas.active_paths, path)
 }
 
-canvas_metronome_ping :: proc() {
+metronome_ping :: proc() {
     if canvas == nil do return
 
-    canvas_stop_playing_nodes()
+    stop_playing_nodes()
     active_paths_slice := canvas.active_paths[:]
     clear(&canvas.active_paths)
 
     for path in active_paths_slice {
-        path_update(path)
+        graph.path_update(path)
         if path.active {
-            canvas_add_active_path(path)
+            add_active_path(path)
         }
     }
 }
 
-canvas_get_config :: proc() -> CanvasConfiguration {
+get_config :: proc() -> CanvasConfiguration {
     return canvas.config
 }

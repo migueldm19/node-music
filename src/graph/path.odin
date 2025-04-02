@@ -1,4 +1,4 @@
-package main
+package graph
 
 import rl "vendor:raylib"
 import "core:math"

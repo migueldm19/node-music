@@ -76,7 +76,7 @@ stop_all_notes :: proc() {
 check_errors :: proc() {
     if pm.HasHostError(output_stream) {
         buff: [256]byte
-        log.debug("Midi host error", pm.GetHostErrorText(buff[:]))
+        log.warn("Midi host error", pm.GetHostErrorText(buff[:]))
         reconnect()
     }
 }

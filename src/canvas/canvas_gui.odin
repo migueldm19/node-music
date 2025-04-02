@@ -1,10 +1,10 @@
-package main
+package canvas
 
 import rl "vendor:raylib"
 import glfw "vendor:glfw"
-import imgui "../deps/odin-imgui"
-import "../deps/odin-imgui/imgui_impl_opengl3"
-import "../deps/odin-imgui/imgui_impl_glfw"
+import imgui "../../deps/odin-imgui"
+import "../../deps/odin-imgui/imgui_impl_opengl3"
+import "../../deps/odin-imgui/imgui_impl_glfw"
 import "core:log"
 import "core:unicode/utf8"
 import "core:fmt"
@@ -12,17 +12,19 @@ import "core:strings"
 import "core:strconv"
 import "core:c"
 
-import "midi"
+import "../midi"
+import "../graph"
+import "../config"
 
-canvas_gui_draw_and_update :: proc() {
-    canvas_gui_begin()
-        canvas_gui_main_menu()
-        canvas_gui_menu_bar()
-        canvas_gui_node()
-    canvas_gui_end()
+gui_draw_and_update :: proc() {
+    gui_begin()
+        gui_main_menu()
+        gui_menu_bar()
+        gui_node()
+    gui_end()
 }
 
-canvas_gui_menu_bar :: proc() {
+gui_menu_bar :: proc() {
     openSavePopup: bool
     openLoadPopup: bool
 
@@ -36,18 +38,18 @@ canvas_gui_menu_bar :: proc() {
         if openSavePopup do imgui.OpenPopup("Save path")
         if openLoadPopup do imgui.OpenPopup("Load path")
 
-        canvas_gui_save_menu()
-        canvas_gui_load_menu()
+        gui_save_menu()
+        gui_load_menu()
 
         imgui.EndMainMenuBar()
     }
 }
 
 //TODO: See how to input text for path (or open file manager)
-canvas_gui_save_menu :: proc() {
+gui_save_menu :: proc() {
     if imgui.BeginPopupModal("Save path", nil, {.AlwaysAutoResize}) {
         if imgui.Button("Save") {
-            canvas_serialize("canvas.json")
+            serialize("canvas.json")
             imgui.CloseCurrentPopup()
         }
         imgui.SameLine()
@@ -58,10 +60,10 @@ canvas_gui_save_menu :: proc() {
     }
 }
 
-canvas_gui_load_menu :: proc() {
+gui_load_menu :: proc() {
     if imgui.BeginPopupModal("Load path", nil, {.AlwaysAutoResize}) {
         if imgui.Button("Load") {
-            canvas_load_file("canvas.json")
+            load_from_file("canvas.json")
             imgui.CloseCurrentPopup()
         }
         imgui.SameLine()
@@ -72,78 +74,78 @@ canvas_gui_load_menu :: proc() {
     }
 }
 
-canvas_gui_main_menu:: proc() {
+gui_main_menu:: proc() {
     //TODO: Change with logos?
     if imgui.Begin("Main menu") {
-        canvas_gui_play_stop()
-        canvas_gui_main_config()
-        canvas_gui_tool_selection()
+        gui_play_stop()
+        gui_main_config()
+        gui_tool_selection()
     }
     imgui.End()
 }
 
-canvas_gui_main_config :: proc() {
+gui_main_config :: proc() {
     new_config := canvas.config
     imgui.InputInt("BPM", &new_config.bpm)
     imgui.InputInt("Subdivision", &new_config.subdivision)
     if new_config.bpm != canvas.config.bpm &&
        new_config.bpm > 0 &&
-       new_config.bpm <= MAX_BPM {
+       new_config.bpm <= config.MAX_BPM {
         canvas.config.bpm = new_config.bpm
         metronome_update_sleep_time()
     }
     if new_config.subdivision != canvas.config.subdivision &&
        new_config.subdivision > 0 &&
-       new_config.subdivision <= MAX_SUBDIVISION {
+       new_config.subdivision <= config.MAX_SUBDIVISION {
         canvas.config.subdivision = new_config.subdivision
         metronome_update_sleep_time()
     }
 }
 
-canvas_gui_tool_selection :: proc() {
+gui_tool_selection :: proc() {
     imgui.Text("Tools")
     if imgui.RadioButton("Mouse", canvas.tool_selected == .MouseTool) {
-        canvas_change_tool(.MouseTool)
+        change_tool(.MouseTool)
     }
     if imgui.RadioButton("Node", canvas.tool_selected == .NodeTool) {
-        canvas_change_tool(.NodeTool)
+        change_tool(.NodeTool)
     }
     if imgui.RadioButton("Path", canvas.tool_selected == .NormalPathTool) {
-        canvas_change_tool(.NormalPathTool)
+        change_tool(.NormalPathTool)
     }
     imgui.SameLine()
     if imgui.RadioButton("Transfer", canvas.tool_selected == .TransferPathTool) {
-        canvas_change_tool(.TransferPathTool)
+        change_tool(.TransferPathTool)
     }
 }
 
-canvas_gui_play_stop :: proc() {
+gui_play_stop :: proc() {
     if canvas.playing {
         if imgui.Button("Stop") {
-            canvas_stop_playing()
+            stop_playing()
         }
     } else {
         if imgui.Button("Play") {
-            canvas_start_playing()
+            start_playing()
         }
     }
 }
 
 possible_notes_for_node: [128]cstring
-canvas_gui_node :: proc() {
+gui_node :: proc() {
     for _, node in canvas.nodes {
         if !node.selected do continue
 
         if imgui.Begin(fmt.ctprintf("Node %v", node.id)) {
-            canvas_gui_node_properties(node)
-            canvas_gui_note_selection(node)
-            canvas_gui_egress_paths(node)
+            gui_node_properties(node)
+            gui_note_selection(node)
+            gui_egress_paths(node)
         }
         imgui.End()
     }
 }
 
-canvas_gui_node_properties :: proc(node: ^Node) {
+gui_node_properties :: proc(node: ^graph.Node) {
     if imgui.CollapsingHeader("Properties", {.DefaultOpen}) {
         imgui.Checkbox("Begining", &node.begining)
         channel: c.int = i32(node.channel)
@@ -153,7 +155,7 @@ canvas_gui_node_properties :: proc(node: ^Node) {
     }
 }
 
-canvas_gui_note_selection :: proc(node: ^Node) {
+gui_note_selection :: proc(node: ^graph.Node) {
     if imgui.CollapsingHeader("Note selection", {.DefaultOpen}) {
         imgui.Checkbox("Random notes", &node.random_note)
         if !node.random_note {
@@ -167,13 +169,13 @@ canvas_gui_note_selection :: proc(node: ^Node) {
 
             if imgui.IsItemEdited() {
                 log.debugf("selected %v", selected_note)
-                node_change_note(node, midi.Note(selected_note))
+                graph.node_change_note(node, midi.Note(selected_note))
             }
         }
     }
 }
 
-canvas_gui_egress_paths :: proc(node: ^Node) {
+gui_egress_paths :: proc(node: ^graph.Node) {
     if len(node.next_paths) == 0 do return
     if imgui.CollapsingHeader("Egress paths", {.DefaultOpen}) {
         for path in node.next_paths {
@@ -186,7 +188,7 @@ canvas_gui_egress_paths :: proc(node: ^Node) {
     }
 }
 
-canvas_gui_init :: proc() {
+gui_init :: proc() {
     log.debug("Initializing ImGui")
     imgui.CreateContext()
     window := rl.GetWindowHandle()
@@ -199,7 +201,7 @@ canvas_gui_init :: proc() {
     }
 }
 
-canvas_gui_deinit :: proc() {
+gui_deinit :: proc() {
     log.debug("Deinitializing ImGui opengl")
     defer imgui_impl_opengl3.Shutdown()
     // log.debug("Deinitializing ImGui glfw")
@@ -208,13 +210,13 @@ canvas_gui_deinit :: proc() {
     //imgui.DestroyContext()
 }
 
-canvas_gui_begin :: proc() {
+gui_begin :: proc() {
     imgui_impl_opengl3.NewFrame()
 	imgui_impl_glfw.NewFrame()
     imgui.NewFrame()
 }
 
-canvas_gui_end :: proc() {
+gui_end :: proc() {
     imgui.Render()
     imgui_impl_opengl3.RenderDrawData(imgui.GetDrawData())
 }

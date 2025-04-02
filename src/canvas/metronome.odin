@@ -1,4 +1,4 @@
-package main
+package canvas
 
 import "core:thread"
 import "core:time"
@@ -24,7 +24,7 @@ metronome_thread_deinit :: proc() {
 sleep_time: time.Duration
 
 metronome_update_sleep_time :: proc() {
-    config := canvas_get_config()
+    config := get_config()
     nanoseconds_between_subbeats : = ((60.0 / f32(config.bpm)) / f32(config.subdivision)) * 1000000000
     sleep_time = time.Duration(nanoseconds_between_subbeats)  * time.Nanosecond
 }
@@ -35,6 +35,6 @@ metronome_thread_proc :: proc(t: ^thread.Thread) {
 
     for {
         time.accurate_sleep(sleep_time)
-        canvas_metronome_ping()
+        metronome_ping()
     }
 }
