@@ -184,13 +184,12 @@ node_stop_playing :: proc(node: ^Node) {
     midi.note_command(.Stop, node.current_note, node.channel, 0)
 }
 
+// Returns active next paths
 node_update :: proc(node: ^Node) {
     for path, idx in node.next_paths {
         if path.end.deleted {
             path_free(path)
             unordered_remove(&node.next_paths, idx)
-        } else if path.active {
-            canvas_add_active_path(path)
         }
     }
 }

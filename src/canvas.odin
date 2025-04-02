@@ -327,6 +327,9 @@ canvas_update :: proc() {
 
     for _, node in canvas.nodes {
         node_update(node)
+        for path in node.next_paths {
+            if path.active do canvas_add_active_path(path)
+        }
     }
 
     canvas_clear_node_delete_queue()
