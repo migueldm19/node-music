@@ -172,8 +172,6 @@ node_play :: proc(node: ^Node) {
     midi.note_command(.Play, node.current_note, node.channel, 127)
     node.playing = true
 
-    canvas_schedule_node_stop(node)
-
     for path in node.next_paths {
         path_activate(path)
     }
